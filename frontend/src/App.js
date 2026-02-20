@@ -1,7 +1,72 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import './App.css';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// ─── Export helpers ───────────────────────────────────────────────────────────
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAsJSON(data) {
+  const content = JSON.stringify(data, null, 2);
+  const ts = new Date().toISOString().slice(0, 10);
+  downloadFile(content, `nightcafe-imports-${ts}.json`, 'application/json');
+}
+
+function exportAsCSV(data) {
+  const CSV_COLS = [
+    'id', 'creationId', 'title', 'prompt', 'revisedPrompt',
+    'model', 'initialResolution', 'aspectRatio', 'seed',
+    'isPublished', 'imageUrl', 'allImagesCount',
+    'samplingMethod', 'runtime', 'promptWeight', 'tags',
+    'url', 'importedAt', 'extractedAt'
+  ];
+
+  const escape = (v) => {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  };
+
+  const rows = [CSV_COLS.join(',')];
+  for (const item of data) {
+    const row = [
+      item.id,
+      item.creationId,
+      item.title,
+      item.prompt,
+      item.revisedPrompt,
+      item.model,
+      item.initialResolution,
+      item.aspectRatio,
+      item.seed,
+      item.isPublished ? 'ja' : 'nee',
+      item.imageUrl,
+      (item.allImages || []).length,
+      item.metadata?.samplingMethod,
+      item.metadata?.runtime,
+      item.metadata?.overallPromptWeight,
+      (item.metadata?.tags || []).join(' | '),
+      item.url,
+      item.importedAt,
+      item.extractedAt
+    ].map(escape);
+    rows.push(row.join(','));
+  }
+
+  const ts = new Date().toISOString().slice(0, 10);
+  downloadFile(rows.join('\n'), `nightcafe-imports-${ts}.csv`, 'text/csv;charset=utf-8;');
+}
 
 function App() {
   const [imports, setImports] = useState([]);
