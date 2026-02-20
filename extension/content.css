@@ -39,6 +39,16 @@
   cursor: wait;
 }
 
+#nc-importer-btn.imported {
+  background: linear-gradient(135deg, #15803d, #166534);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.45), 0 2px 8px rgba(0,0,0,0.3);
+}
+
+#nc-importer-btn.imported:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.55);
+}
+
 @keyframes nc-btn-appear {
   from {
     opacity: 0;
