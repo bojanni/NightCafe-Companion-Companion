@@ -318,9 +318,9 @@ function App() {
                 data-testid={`creation-card-${item.id}`}
               >
                 <div className="card-image-wrap">
-                  {item.imageUrl ? (
+                  {item.image_url ? (
                     <img
-                      src={item.imageUrl}
+                      src={item.image_url}
                       alt={item.title || 'NightCafe'}
                       className="card-image"
                       loading="lazy"
@@ -336,24 +336,23 @@ function App() {
                     </div>
                   )}
                   <div className="card-badges">
-                    {item.isPublished && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
-                    {item.creationType === 'video' && <span className="badge-video">VIDEO</span>}
-                    {(item.allImages?.length || 0) > 1 && (
-                      <span className="badge-count">{item.allImages.length}</span>
+                    {item.is_published && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
+                    {item.creation_type === 'video' && <span className="badge-video">VIDEO</span>}
+                    {(item.all_images?.length || 0) > 1 && (
+                      <span className="badge-count">{item.all_images.length}</span>
                     )}
                   </div>
                 </div>
                 <div className="card-body">
                   <h3 className="card-title" title={item.title}>
-                    {item.title || item.creationId || 'Naamloze creatie'}
+                    {item.title || item.nightcafe_creation_id || 'Naamloze creatie'}
                   </h3>
-                  {item.prompt && (
-                    <p className="card-prompt">{item.prompt.slice(0, 90)}{item.prompt.length > 90 ? '...' : ''}</p>
+                  {item.prompt_used && (
+                    <p className="card-prompt">{item.prompt_used.slice(0, 90)}{item.prompt_used.length > 90 ? '...' : ''}</p>
                   )}
                   <div className="card-meta">
-                    {item.model && <span className="badge badge-model">{item.model.slice(0, 22)}</span>}
-                    {item.aspectRatio && <span className="badge badge-ratio">{item.aspectRatio}</span>}
-                    <span className="card-date">{formatDate(item.importedAt)}</span>
+                    {item.aspect_ratio && <span className="badge badge-ratio">{item.aspect_ratio}</span>}
+                    <span className="card-date">{formatDate(item.imported_at)}</span>
                   </div>
                 </div>
               </article>
