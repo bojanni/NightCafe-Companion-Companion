@@ -224,6 +224,42 @@ if (window.__ncImporterLoaded) {
     return null;
   }
 
+  // ─── Fuzzy label extractor (case-insensitive substring match) ────────────────
+  // Used as fallback when exact label match fails.
+  // Finds any label element whose text includes `keyword` (case-insensitive),
+  // then returns the adjacent value element text.
+  function extractFieldFuzzy(keyword, container) {
+    const ctx = container || document.body;
+    const kw = keyword.toLowerCase();
+    const walker = document.createTreeWalker(ctx, NodeFilter.SHOW_TEXT);
+    let node;
+
+    while ((node = walker.nextNode())) {
+      const nodeText = node.textContent.trim().toLowerCase();
+      // Must contain keyword and be short enough to be a label (not a paragraph)
+      if (!nodeText.includes(kw) || node.textContent.trim().length > 60) continue;
+
+      const labelEl = node.parentElement;
+      if (labelEl.textContent.trim().length > 80) continue; // skip containers
+
+      const candidates = [
+        labelEl.nextElementSibling,
+        labelEl.parentElement?.nextElementSibling,
+        labelEl.parentElement?.parentElement?.nextElementSibling
+      ];
+
+      for (const cand of candidates) {
+        if (!cand) continue;
+        const val = cand.textContent.trim();
+        // Value must be substantial text (not just another label)
+        if (val && val.length > 10 && val.length < 2000 && !val.toLowerCase().includes(kw)) {
+          return val;
+        }
+      }
+    }
+    return null;
+  }
+
   // ─── Model name ───────────────────────────────────────────────────────────────
   function extractModelName(container) {
     const ctx = container || document.body;
