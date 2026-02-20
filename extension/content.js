@@ -9,15 +9,27 @@ if (window.__ncImporterLoaded) {
   let floatingBtn = null;
   let toastEl = null;
 
-  // Load initial toggle state
+  // Load initial toggle state and check status on page load
   chrome.storage.sync.get(['pageButtonEnabled'], (data) => {
-    if (data.pageButtonEnabled !== false) injectButton();
+    if (data.pageButtonEnabled !== false) {
+      injectButton();
+      // Check if this creation was already imported
+      scheduleStatusCheck();
+    }
   });
 
-  // ─── Message handler (async) ──────────────────────────────────────────────────
+  // SPA navigatie detectie (NightCafe is een React SPA)
+  setupSPANavigation();
+
+  // ─── Message handler (async) ────────────────────────────────────────────────
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === 'toggleButton') {
-      if (msg.enabled) injectButton(); else removeButton();
+      if (msg.enabled) {
+        injectButton();
+        scheduleStatusCheck();
+      } else {
+        removeButton();
+      }
       sendResponse({ ok: true });
       return true;
     }
@@ -25,9 +37,81 @@ if (window.__ncImporterLoaded) {
       extractCreationData()
         .then(sendResponse)
         .catch(err => sendResponse({ error: err.message }));
-      return true; // keep channel open for async
+      return true;
+    }
+    if (msg.action === 'markImported') {
+      // Popup meldt dat import succesvol was → update floating button
+      setButtonImported(msg.importedAt);
+      sendResponse({ ok: true });
+      return true;
     }
   });
+
+  // ─── SPA navigatie ───────────────────────────────────────────────────────────
+  function setupSPANavigation() {
+    const orig = history.pushState.bind(history);
+    history.pushState = function (...args) {
+      orig(...args);
+      setTimeout(onNavigated, 900);
+    };
+    window.addEventListener('popstate', () => setTimeout(onNavigated, 900));
+  }
+
+  function onNavigated() {
+    removeButton();
+    chrome.storage.sync.get(['pageButtonEnabled'], (data) => {
+      if (data.pageButtonEnabled !== false) {
+        injectButton();
+        scheduleStatusCheck();
+      }
+    });
+  }
+
+  // ─── Status check (floating button badge) ───────────────────────────────────
+  function scheduleStatusCheck() {
+    const creationId = extractCreationId();
+    if (!creationId) return;
+    // Small delay to let the button render first
+    setTimeout(() => checkImportStatus(creationId), 600);
+  }
+
+  async function checkImportStatus(creationId) {
+    if (!floatingBtn) return;
+    try {
+      const { endpointUrl } = await chrome.storage.sync.get(['endpointUrl']);
+      const endpoint = (endpointUrl || 'http://localhost:3000').replace(/\/$/, '');
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(
+        `${endpoint}/api/import/status?creationId=${encodeURIComponent(creationId)}`,
+        { signal: controller.signal }
+      );
+      clearTimeout(timeout);
+
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.exists) {
+        setButtonImported(data.importedAt);
+      }
+    } catch { /* endpoint niet beschikbaar – stil falen */ }
+  }
+
+  function setButtonImported(importedAt) {
+    if (!floatingBtn) return;
+    floatingBtn.classList.add('imported');
+    const dateStr = importedAt
+      ? new Date(importedAt).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' })
+      : '';
+    floatingBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span>Al geïmporteerd${dateStr ? ' · ' + dateStr : ''}</span>`;
+    floatingBtn.title = 'Al geïmporteerd – klik om opnieuw te importeren';
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // DATA EXTRACTION
