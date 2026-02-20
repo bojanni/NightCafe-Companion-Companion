@@ -5,12 +5,13 @@ const API = process.env.REACT_APP_BACKEND_URL;
 
 function App() {
   const [imports, setImports] = useState([]);
-  const [stats, setStats] = useState({ total: 0, withImage: 0, withPrompt: 0 });
+  const [stats, setStats] = useState({ total: 0, withImage: 0, withPrompt: 0, withMultipleImages: 0, published: 0 });
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [toast, setToast] = useState(null);
+  const [activeImage, setActiveImage] = useState(null); // for gallery carousel
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -40,6 +41,11 @@ function App() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
+  // When a creation is selected, reset active image
+  useEffect(() => {
+    if (selected) setActiveImage(selected.imageUrl || null);
+  }, [selected]);
+
   const handleDelete = async (id) => {
     try {
       await fetch(`${API}/api/imports/${id}`, { method: 'DELETE' });
@@ -58,8 +64,10 @@ function App() {
     return (
       (item.title || '').toLowerCase().includes(q) ||
       (item.prompt || '').toLowerCase().includes(q) ||
+      (item.revisedPrompt || '').toLowerCase().includes(q) ||
       (item.model || '').toLowerCase().includes(q) ||
-      (item.creationId || '').toLowerCase().includes(q)
+      (item.creationId || '').toLowerCase().includes(q) ||
+      (item.aspectRatio || '').toLowerCase().includes(q)
     );
   });
 
@@ -71,6 +79,12 @@ function App() {
         hour: '2-digit', minute: '2-digit'
       });
     } catch { return iso; }
+  };
+
+  const allGalleryImages = (item) => {
+    if (!item) return [];
+    const imgs = item.allImages?.length > 0 ? item.allImages : (item.imageUrl ? [item.imageUrl] : []);
+    return [...new Set(imgs)]; // deduplicate
   };
 
   return (
@@ -108,40 +122,35 @@ function App() {
 
       {/* Stats bar */}
       <div className="stats-bar" data-testid="stats-bar">
-        <div className="stat-card" data-testid="stat-total">
-          <span className="stat-num">{stats.total}</span>
-          <span className="stat-label">Totaal</span>
-        </div>
-        <div className="stat-card" data-testid="stat-with-image">
-          <span className="stat-num">{stats.withImage}</span>
-          <span className="stat-label">Met afbeelding</span>
-        </div>
-        <div className="stat-card" data-testid="stat-with-prompt">
-          <span className="stat-num">{stats.withPrompt}</span>
-          <span className="stat-label">Met prompt</span>
-        </div>
+        {[
+          { key: 'total', label: 'Totaal', value: stats.total },
+          { key: 'withImage', label: 'Met afbeelding', value: stats.withImage },
+          { key: 'withPrompt', label: 'Met prompt', value: stats.withPrompt },
+          { key: 'withMultipleImages', label: 'Meerdere afb.', value: stats.withMultipleImages },
+          { key: 'published', label: 'Gepubliceerd', value: stats.published },
+        ].map(s => (
+          <div className="stat-card" key={s.key} data-testid={`stat-${s.key}`}>
+            <span className="stat-num">{s.value ?? 0}</span>
+            <span className="stat-label">{s.label}</span>
+          </div>
+        ))}
       </div>
 
       {/* Search */}
       <div className="search-bar" data-testid="search-bar">
-        <div className="search-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </div>
+        <svg className="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
         <input
           className="search-input"
           type="text"
-          placeholder="Zoek op titel, prompt, model..."
+          placeholder="Zoek op titel, prompt, model, aspect ratio..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           data-testid="search-input"
         />
         {search && (
-          <button className="search-clear" onClick={() => setSearch('')} data-testid="search-clear">
-            &#x2715;
-          </button>
+          <button className="search-clear" onClick={() => setSearch('')} data-testid="search-clear">&#x2715;</button>
         )}
       </div>
 
@@ -160,12 +169,8 @@ function App() {
                 <path d="M3 9h18M9 21V9"/>
               </svg>
             </div>
-            <h3>{search ? 'Geen resultaten gevonden' : 'Nog geen imports'}</h3>
-            <p>
-              {search
-                ? `Geen creaties gevonden voor "${search}"`
-                : 'Gebruik de browser extensie om NightCafe creaties te importeren'}
-            </p>
+            <h3>{search ? 'Geen resultaten' : 'Nog geen imports'}</h3>
+            <p>{search ? `Geen creaties gevonden voor "${search}"` : 'Gebruik de browser extensie om NightCafe creaties te importeren'}</p>
           </div>
         ) : (
           <div className="gallery-grid" data-testid="gallery-grid">
@@ -176,12 +181,11 @@ function App() {
                 onClick={() => setSelected(selected?.id === item.id ? null : item)}
                 data-testid={`creation-card-${item.id}`}
               >
-                {/* Image */}
                 <div className="card-image-wrap">
                   {item.imageUrl ? (
                     <img
                       src={item.imageUrl}
-                      alt={item.title || 'NightCafe creatie'}
+                      alt={item.title || 'NightCafe'}
                       className="card-image"
                       loading="lazy"
                       onError={e => { e.target.style.display = 'none'; }}
@@ -195,23 +199,23 @@ function App() {
                       </svg>
                     </div>
                   )}
-                  <div className="card-overlay">
-                    <span className="card-source">{item.source || 'NightCafe'}</span>
+                  <div className="card-badges">
+                    {item.isPublished && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
+                    {(item.allImages?.length || 0) > 1 && (
+                      <span className="badge-count">{item.allImages.length}</span>
+                    )}
                   </div>
                 </div>
-
-                {/* Info */}
                 <div className="card-body">
                   <h3 className="card-title" title={item.title}>
                     {item.title || item.creationId || 'Naamloze creatie'}
                   </h3>
                   {item.prompt && (
-                    <p className="card-prompt">
-                      {item.prompt.slice(0, 100)}{item.prompt.length > 100 ? '...' : ''}
-                    </p>
+                    <p className="card-prompt">{item.prompt.slice(0, 90)}{item.prompt.length > 90 ? '...' : ''}</p>
                   )}
                   <div className="card-meta">
-                    {item.model && <span className="badge badge-model">{item.model.slice(0, 20)}</span>}
+                    {item.model && <span className="badge badge-model">{item.model.slice(0, 22)}</span>}
+                    {item.aspectRatio && <span className="badge badge-ratio">{item.aspectRatio}</span>}
                     <span className="card-date">{formatDate(item.importedAt)}</span>
                   </div>
                 </div>
@@ -227,56 +231,162 @@ function App() {
           <div className="detail-panel" onClick={e => e.stopPropagation()} data-testid="detail-panel">
 
             <div className="detail-header">
-              <h2 data-testid="detail-title">{selected.title || 'Naamloze creatie'}</h2>
-              <button className="close-btn" onClick={() => setSelected(null)} data-testid="detail-close-btn">
-                &#x2715;
-              </button>
+              <div className="detail-title-row">
+                <h2 data-testid="detail-title">{selected.title || 'Naamloze creatie'}</h2>
+                {selected.isPublished && (
+                  <span className="pub-badge" data-testid="detail-published-badge">Gepubliceerd</span>
+                )}
+              </div>
+              <button className="close-btn" onClick={() => setSelected(null)} data-testid="detail-close-btn">&#x2715;</button>
             </div>
 
-            {selected.imageUrl && (
+            {/* Main image display */}
+            {activeImage && (
               <div className="detail-image-wrap">
-                <img src={selected.imageUrl} alt={selected.title} className="detail-image" data-testid="detail-image"/>
-                <a href={selected.imageUrl} target="_blank" rel="noopener noreferrer" className="image-link" data-testid="detail-image-link">
-                  Origineel openen &#8599;
+                <img
+                  src={activeImage}
+                  alt={selected.title}
+                  className="detail-image"
+                  data-testid="detail-image"
+                  onError={e => { e.target.style.display = 'none'; }}
+                />
+                <a href={activeImage} target="_blank" rel="noopener noreferrer" className="image-link" data-testid="detail-image-link">
+                  Origineel &#8599;
                 </a>
               </div>
             )}
 
+            {/* Thumbnail gallery strip */}
+            {allGalleryImages(selected).length > 1 && (
+              <div className="thumb-strip" data-testid="detail-thumb-strip">
+                {allGalleryImages(selected).map((imgUrl, idx) => (
+                  <button
+                    key={idx}
+                    className={`thumb-item ${activeImage === imgUrl ? 'active' : ''}`}
+                    onClick={() => setActiveImage(imgUrl)}
+                    data-testid={`thumb-item-${idx}`}
+                    title={`Afbeelding ${idx + 1}`}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      onError={e => { e.target.style.display = 'none'; }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="detail-fields">
+
+              {/* Prompts */}
               {selected.prompt && (
                 <div className="detail-field" data-testid="detail-prompt">
-                  <label>Prompt</label>
+                  <label>Text Prompt</label>
                   <p>{selected.prompt}</p>
                 </div>
               )}
-              {selected.model && (
-                <div className="detail-field" data-testid="detail-model">
-                  <label>Model</label>
-                  <p>{selected.model}</p>
+              {selected.metadata?.promptHidden && (
+                <div className="detail-field">
+                  <label>Text Prompt</label>
+                  <p className="muted-text">Verborgen door de auteur</p>
                 </div>
               )}
-              {selected.creationId && (
-                <div className="detail-field" data-testid="detail-creation-id">
-                  <label>Creation ID</label>
-                  <p className="mono">{selected.creationId}</p>
+              {selected.revisedPrompt && (
+                <div className="detail-field" data-testid="detail-revised-prompt">
+                  <label>Revised Prompt</label>
+                  <p>{selected.revisedPrompt}</p>
                 </div>
               )}
+
+              {/* Creation settings grid */}
+              <div className="settings-grid">
+                {selected.model && (
+                  <div className="setting-item" data-testid="detail-model">
+                    <label>Model</label>
+                    <span>{selected.model}</span>
+                  </div>
+                )}
+                {selected.initialResolution && (
+                  <div className="setting-item" data-testid="detail-resolution">
+                    <label>Initial Resolution</label>
+                    <span>{selected.initialResolution}</span>
+                  </div>
+                )}
+                {selected.aspectRatio && (
+                  <div className="setting-item" data-testid="detail-aspect-ratio">
+                    <label>Aspect Ratio</label>
+                    <span>{selected.aspectRatio}</span>
+                  </div>
+                )}
+                {selected.seed && (
+                  <div className="setting-item" data-testid="detail-seed">
+                    <label>Seed</label>
+                    <span className="mono-small">{selected.seed}</span>
+                  </div>
+                )}
+                {selected.metadata?.samplingMethod && (
+                  <div className="setting-item" data-testid="detail-sampling">
+                    <label>Sampling Method</label>
+                    <span>{selected.metadata.samplingMethod}</span>
+                  </div>
+                )}
+                {selected.metadata?.runtime && (
+                  <div className="setting-item" data-testid="detail-runtime">
+                    <label>Runtime</label>
+                    <span>{selected.metadata.runtime}</span>
+                  </div>
+                )}
+                {selected.metadata?.overallPromptWeight && (
+                  <div className="setting-item" data-testid="detail-prompt-weight">
+                    <label>Prompt Weight</label>
+                    <span>{selected.metadata.overallPromptWeight}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Tags */}
+              {selected.metadata?.tags?.length > 0 && (
+                <div className="detail-field" data-testid="detail-tags">
+                  <label>Tags</label>
+                  <div className="tags-row">
+                    {selected.metadata.tags.map(tag => (
+                      <span key={tag} className="tag-pill">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Source URL */}
               <div className="detail-field" data-testid="detail-url">
-                <label>URL</label>
+                <label>NightCafe URL</label>
                 <a href={selected.url} target="_blank" rel="noopener noreferrer" className="detail-link">
                   {selected.url}
                 </a>
               </div>
+
+              {/* Creation ID */}
+              {selected.creationId && (
+                <div className="detail-field" data-testid="detail-creation-id">
+                  <label>Creation ID</label>
+                  <span className="mono-small">{selected.creationId}</span>
+                </div>
+              )}
+
+              {/* Import time */}
               <div className="detail-field" data-testid="detail-imported-at">
                 <label>Geimporteerd op</label>
                 <p>{formatDate(selected.importedAt)}</p>
               </div>
-              {selected.metadata && Object.keys(selected.metadata).length > 0 && (
-                <div className="detail-field" data-testid="detail-metadata">
-                  <label>Metadata</label>
-                  <pre className="mono small">{JSON.stringify(selected.metadata, null, 2)}</pre>
+
+              {/* Images count */}
+              {(selected.allImages?.length || 0) > 1 && (
+                <div className="detail-field" data-testid="detail-images-count">
+                  <label>Afbeeldingen</label>
+                  <p>{selected.allImages.length} varianten geimporteerd</p>
                 </div>
               )}
+
             </div>
 
             <div className="detail-actions">
@@ -286,19 +396,11 @@ function App() {
               {deleteConfirm === selected.id ? (
                 <div className="delete-confirm">
                   <span>Zeker weten?</span>
-                  <button className="btn btn-danger" onClick={() => handleDelete(selected.id)} data-testid="confirm-delete-btn">
-                    Verwijder
-                  </button>
-                  <button className="btn btn-ghost" onClick={() => setDeleteConfirm(null)} data-testid="cancel-delete-btn">
-                    Annuleer
-                  </button>
+                  <button className="btn btn-danger" onClick={() => handleDelete(selected.id)} data-testid="confirm-delete-btn">Verwijder</button>
+                  <button className="btn btn-ghost" onClick={() => setDeleteConfirm(null)} data-testid="cancel-delete-btn">Annuleer</button>
                 </div>
               ) : (
-                <button
-                  className="btn btn-danger-ghost"
-                  onClick={() => setDeleteConfirm(selected.id)}
-                  data-testid="delete-btn"
-                >
+                <button className="btn btn-danger-ghost" onClick={() => setDeleteConfirm(selected.id)} data-testid="delete-btn">
                   Verwijder
                 </button>
               )}

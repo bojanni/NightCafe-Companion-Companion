@@ -39,10 +39,21 @@ class CreationImport(BaseModel):
     url: str
     creationId: Optional[str] = None
     title: Optional[str] = None
+    # Prompts
     prompt: Optional[str] = None
+    revisedPrompt: Optional[str] = None
+    # Images
     imageUrl: Optional[str] = None
+    allImages: Optional[List[str]] = None
+    # Creation settings
     model: Optional[str] = None
     style: Optional[str] = None
+    initialResolution: Optional[str] = None
+    aspectRatio: Optional[str] = None
+    seed: Optional[str] = None
+    # State
+    isPublished: Optional[bool] = None
+    # Extra
     metadata: Optional[Dict[str, Any]] = None
     extractedAt: Optional[str] = None
 
@@ -50,7 +61,7 @@ class StoredImport(CreationImport):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     importedAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
-# ─── Existing status routes ───────────────────────────────────────────────────
+# ─── Status routes ────────────────────────────────────────────────────────────
 
 @api_router.get("/")
 async def root():
@@ -73,39 +84,64 @@ async def get_status_checks():
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
     return status_checks
 
-# ─── Import routes ────────────────────────────────────────────────────────────
+# ─── Import routes (health + stats BEFORE parameterized routes) ───────────────
 
 @api_router.get("/import/health")
 async def import_health():
-    """Health check endpoint for the extension connection test."""
-    return {"status": "ok", "service": "NightCafe Studio Data Bridge", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {
+        "status": "ok",
+        "service": "NightCafe Studio Data Bridge",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.get("/imports/stats/summary")
+async def get_stats():
+    total = await db.imports.count_documents({})
+    with_image = await db.imports.count_documents({"imageUrl": {"$ne": None}})
+    with_prompt = await db.imports.count_documents({"prompt": {"$ne": None}})
+    with_multi = await db.imports.count_documents({"allImages.1": {"$exists": True}})
+    published = await db.imports.count_documents({"isPublished": True})
+    return {
+        "total": total,
+        "withImage": with_image,
+        "withPrompt": with_prompt,
+        "withMultipleImages": with_multi,
+        "published": published
+    }
 
 @api_router.post("/import", status_code=201)
 async def import_creation(creation: CreationImport):
-    """Receive a NightCafe creation import from the browser extension."""
     stored = StoredImport(**creation.model_dump())
     doc = stored.model_dump()
 
-    # Check for duplicate by creationId
+    # Duplicate check by creationId
     if stored.creationId:
         existing = await db.imports.find_one({"creationId": stored.creationId}, {"_id": 0})
         if existing:
             logger.info(f"Duplicate import skipped: {stored.creationId}")
-            return {"success": True, "id": existing.get("id"), "duplicate": True, "message": "Al eerder geimporteerd"}
+            return {
+                "success": True,
+                "id": existing.get("id"),
+                "duplicate": True,
+                "message": "Al eerder geimporteerd"
+            }
 
     await db.imports.insert_one(doc)
     logger.info(f"New import: {stored.id} – {stored.title or stored.url}")
-    return {"success": True, "id": stored.id, "duplicate": False, "message": "Creatie succesvol geimporteerd"}
+    return {
+        "success": True,
+        "id": stored.id,
+        "duplicate": False,
+        "message": "Creatie succesvol geimporteerd"
+    }
 
 @api_router.get("/imports")
 async def get_imports():
-    """List all imported creations."""
     imports = await db.imports.find({}, {"_id": 0}).sort("importedAt", -1).to_list(500)
     return imports
 
 @api_router.get("/imports/{import_id}")
 async def get_import(import_id: str):
-    """Get a single import by ID."""
     item = await db.imports.find_one({"id": import_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Import niet gevonden")
@@ -113,21 +149,12 @@ async def get_import(import_id: str):
 
 @api_router.delete("/imports/{import_id}")
 async def delete_import(import_id: str):
-    """Delete an import by ID."""
     result = await db.imports.delete_one({"id": import_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Import niet gevonden")
     return {"success": True}
 
-@api_router.get("/imports/stats/summary")
-async def get_stats():
-    """Get import statistics."""
-    total = await db.imports.count_documents({})
-    with_image = await db.imports.count_documents({"imageUrl": {"$ne": None}})
-    with_prompt = await db.imports.count_documents({"prompt": {"$ne": None}})
-    return {"total": total, "withImage": with_image, "withPrompt": with_prompt}
-
-# ─── App setup ───────────────────────────────────────────────────────────────
+# ─── App ─────────────────────────────────────────────────────────────────────
 
 app.include_router(api_router)
 
