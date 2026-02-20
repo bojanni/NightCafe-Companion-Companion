@@ -346,10 +346,10 @@ function App() {
                     </div>
                   )}
                   <div className="card-badges">
-                    {item.is_published && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
-                    {item.creation_type === 'video' && <span className="badge-video">VIDEO</span>}
-                    {(item.all_images?.length || 0) > 1 && (
-                      <span className="badge-count">{item.all_images.length}</span>
+                    {item.metadata?.is_published && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
+                    {item.media_type === 'video' && <span className="badge-video">VIDEO</span>}
+                    {(item.metadata?.all_images?.length || 0) > 1 && (
+                      <span className="badge-count">{item.metadata.all_images.length}</span>
                     )}
                   </div>
                 </div>
@@ -362,7 +362,7 @@ function App() {
                   )}
                   <div className="card-meta">
                     {item.aspect_ratio && <span className="badge badge-ratio">{item.aspect_ratio}</span>}
-                    <span className="card-date">{formatDate(item.imported_at)}</span>
+                    <span className="card-date">{formatDate(item.created_at)}</span>
                   </div>
                 </div>
               </article>
