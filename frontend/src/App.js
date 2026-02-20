@@ -110,7 +110,7 @@ function App() {
 
   // When a creation is selected, reset active image
   useEffect(() => {
-    if (selected) setActiveImage(selected.imageUrl || null);
+    if (selected) setActiveImage(selected.image_url || null);
   }, [selected]);
 
   const handleDelete = async (id) => {
