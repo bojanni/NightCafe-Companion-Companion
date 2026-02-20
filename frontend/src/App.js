@@ -22,11 +22,10 @@ function exportAsJSON(data) {
 
 function exportAsCSV(data) {
   const CSV_COLS = [
-    'id', 'creationId', 'title', 'prompt', 'revisedPrompt',
-    'model', 'initialResolution', 'aspectRatio', 'seed',
-    'isPublished', 'imageUrl', 'allImagesCount',
-    'samplingMethod', 'runtime', 'promptWeight', 'tags',
-    'url', 'importedAt', 'extractedAt'
+    'id', 'title', 'prompt_used', 'model', 'aspect_ratio',
+    'media_type', 'start_image', 'image_url', 'allImagesCount',
+    'nightcafe_creation_id', 'source_url', 'created_at',
+    'is_published', 'rating', 'is_favorite'
   ];
 
   const escape = (v) => {
@@ -42,24 +41,20 @@ function exportAsCSV(data) {
   for (const item of data) {
     const row = [
       item.id,
-      item.creationId,
       item.title,
-      item.prompt,
-      item.revisedPrompt,
+      item.prompt_used,
       item.model,
-      item.initialResolution,
-      item.aspectRatio,
-      item.seed,
-      item.isPublished ? 'ja' : 'nee',
-      item.imageUrl,
-      (item.allImages || []).length,
-      item.metadata?.samplingMethod,
-      item.metadata?.runtime,
-      item.metadata?.overallPromptWeight,
-      (item.metadata?.tags || []).join(' | '),
-      item.url,
-      item.importedAt,
-      item.extractedAt
+      item.aspect_ratio,
+      item.media_type,
+      item.start_image,
+      item.image_url,
+      (item.metadata?.all_images || []).length,
+      item.metadata?.nightcafe_creation_id,
+      item.metadata?.source_url,
+      item.created_at,
+      item.metadata?.is_published ? 'ja' : 'nee',
+      item.rating,
+      item.is_favorite ? 'ja' : 'nee'
     ].map(escape);
     rows.push(row.join(','));
   }
@@ -591,7 +586,7 @@ function App() {
             </div>
 
             <div className="detail-actions">
-              <a href={selected.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" data-testid="detail-open-btn">
+              <a href={selected.metadata?.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" data-testid="detail-open-btn">
                 Openen op NightCafe &#8599;
               </a>
               {deleteConfirm === selected.id ? (
