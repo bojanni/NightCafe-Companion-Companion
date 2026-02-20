@@ -267,12 +267,39 @@ if (window.__ncImporterLoaded) {
 
       for (const cand of candidates) {
         if (!cand) continue;
-        // Direct <img>
         if (cand.tagName === 'IMG' && cand.src) return toFullSizeUrl(cand.src);
-        // Nested <img>
         const img = cand.querySelector('img');
         if (img && img.src && img.src.startsWith('http')) return toFullSizeUrl(img.src);
-        // CSS background-image
+        const bgUrl = getBgImageUrl(cand);
+        if (bgUrl) return toFullSizeUrl(bgUrl);
+      }
+    }
+    return null;
+  }
+
+  // Fuzzy variant – zoekt op een trefwoord in de label tekst
+  function extractImageAfterLabelFuzzy(keyword, container) {
+    const ctx = container || document.body;
+    const kw = keyword.toLowerCase();
+    const walker = document.createTreeWalker(ctx, NodeFilter.SHOW_TEXT);
+    let node;
+
+    while ((node = walker.nextNode())) {
+      const t = node.textContent.trim();
+      if (!t.toLowerCase().includes(kw) || t.length > 50) continue;
+      const labelEl = node.parentElement;
+      if (labelEl.textContent.trim().length > 60) continue;
+
+      const candidates = [
+        labelEl.nextElementSibling,
+        labelEl.parentElement?.nextElementSibling,
+        labelEl.parentElement?.parentElement?.nextElementSibling
+      ];
+      for (const cand of candidates) {
+        if (!cand) continue;
+        if (cand.tagName === 'IMG' && cand.src) return toFullSizeUrl(cand.src);
+        const img = cand.querySelector('img');
+        if (img && img.src && img.src.startsWith('http')) return toFullSizeUrl(img.src);
         const bgUrl = getBgImageUrl(cand);
         if (bgUrl) return toFullSizeUrl(bgUrl);
       }
