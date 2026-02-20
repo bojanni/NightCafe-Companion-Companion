@@ -4,7 +4,20 @@ import requests
 import os
 import json
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+def get_base_url():
+    url = os.environ.get('REACT_APP_BACKEND_URL', '')
+    if not url:
+        # Try reading from frontend .env
+        env_path = '/app/frontend/.env'
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    if line.startswith('REACT_APP_BACKEND_URL='):
+                        url = line.strip().split('=', 1)[1]
+                        break
+    return url.rstrip('/')
+
+BASE_URL = get_base_url()
 
 # Health check
 class TestHealth:
