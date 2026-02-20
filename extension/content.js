@@ -39,10 +39,13 @@ if (window.__ncImporterLoaded) {
       url: window.location.href,
       creationId: extractCreationId(),
       title: null,
-      prompt: null,
+      creationType: null,      // 'image' | 'video'
+      prompt: null,            // Text Prompts (afbeelding)
+      videoPrompt: null,       // Video Prompt (video)
       revisedPrompt: null,
       imageUrl: null,
       allImages: [],
+      startImageUrl: null,     // Start Image (input afbeelding bij video/img2img)
       model: null,
       initialResolution: null,
       aspectRatio: null,
