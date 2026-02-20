@@ -115,7 +115,7 @@ function App() {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${API}/api/imports/${id}`, { method: 'DELETE' });
+      await fetch(`${API}/api/gallery-items/${id}`, { method: 'DELETE' });
       setImports(prev => prev.filter(i => i.id !== id));
       setDeleteConfirm(null);
       if (selected?.id === id) setSelected(null);
