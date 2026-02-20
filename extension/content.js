@@ -727,7 +727,8 @@ if (window.__ncImporterLoaded) {
 
       if (res.ok) {
         const result = await res.json();
-        showToast(result.duplicate ? 'Al eerder geimporteerd' : 'Geimporteerd!', 'success');
+        showToast(result.duplicate ? 'Al eerder geïmporteerd' : 'Geïmporteerd!', 'success');
+        setButtonImported(new Date().toISOString());
       } else {
         throw new Error(`Status ${res.status}`);
       }
