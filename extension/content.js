@@ -62,10 +62,15 @@ if (window.__ncImporterLoaded) {
 
   function onNavigated() {
     removeButton();
+    removeBulkButton();
     chrome.storage.sync.get(['pageButtonEnabled'], (data) => {
       if (data.pageButtonEnabled !== false) {
-        injectButton();
-        scheduleStatusCheck();
+        if (isListPage()) {
+          injectBulkButton();
+        } else {
+          injectButton();
+          scheduleStatusCheck();
+        }
       }
     });
   }
