@@ -416,9 +416,26 @@ function App() {
             <div className="detail-fields">
 
               {/* Prompts */}
-              {selected.prompt && (
+              {selected.creationType === 'video' && (
+                <div className="type-badge-row" data-testid="detail-creation-type">
+                  <span className="type-badge type-video">VIDEO</span>
+                </div>
+              )}
+              {selected.prompt && selected.creationType !== 'video' && (
                 <div className="detail-field" data-testid="detail-prompt">
                   <label>Text Prompt</label>
+                  <p>{selected.prompt}</p>
+                </div>
+              )}
+              {selected.videoPrompt && (
+                <div className="detail-field" data-testid="detail-video-prompt">
+                  <label>Video Prompt</label>
+                  <p>{selected.videoPrompt}</p>
+                </div>
+              )}
+              {selected.creationType === 'video' && !selected.videoPrompt && selected.prompt && (
+                <div className="detail-field" data-testid="detail-prompt">
+                  <label>Prompt</label>
                   <p>{selected.prompt}</p>
                 </div>
               )}
@@ -432,6 +449,24 @@ function App() {
                 <div className="detail-field" data-testid="detail-revised-prompt">
                   <label>Revised Prompt</label>
                   <p>{selected.revisedPrompt}</p>
+                </div>
+              )}
+
+              {/* Start Image */}
+              {selected.startImageUrl && (
+                <div className="detail-field" data-testid="detail-start-image">
+                  <label>Start Image</label>
+                  <div className="start-image-wrap">
+                    <img
+                      src={selected.startImageUrl}
+                      alt="Start Image"
+                      className="start-image"
+                      onError={e => { e.target.style.display='none'; }}
+                    />
+                    <a href={selected.startImageUrl} target="_blank" rel="noopener noreferrer" className="start-image-link" data-testid="detail-start-image-link">
+                      Origineel &#8599;
+                    </a>
+                  </div>
                 </div>
               )}
 
