@@ -79,8 +79,14 @@ if (window.__ncImporterLoaded) {
       data.prompt = null;
     }
 
-    // ── 4. Revised Prompt ─────────────────────────────────────────────────────
-    data.revisedPrompt = extractField('Revised Prompt', settingsCtx);
+    // ── 4. Revised Prompt – meerdere label-varianten proberen ────────────────
+    data.revisedPrompt =
+      extractField('Revised Prompt', settingsCtx) ||
+      extractField('Revised prompt', settingsCtx) ||
+      extractField('DALL-E Revised Prompt', settingsCtx) ||
+      extractField('Revised Text Prompt', settingsCtx) ||
+      extractFieldFuzzy('revised', settingsCtx) ||
+      null;
 
     // ── 5. Model ──────────────────────────────────────────────────────────────
     data.model = extractModelName(settingsCtx);
