@@ -130,11 +130,11 @@ function App() {
     const q = search.toLowerCase();
     return (
       (item.title || '').toLowerCase().includes(q) ||
-      (item.prompt || '').toLowerCase().includes(q) ||
-      (item.revisedPrompt || '').toLowerCase().includes(q) ||
-      (item.model || '').toLowerCase().includes(q) ||
-      (item.creationId || '').toLowerCase().includes(q) ||
-      (item.aspectRatio || '').toLowerCase().includes(q)
+      (item.prompt_used || '').toLowerCase().includes(q) ||
+      (item.revised_prompt || '').toLowerCase().includes(q) ||
+      (item.video_prompt || '').toLowerCase().includes(q) ||
+      (item.nightcafe_creation_id || '').toLowerCase().includes(q) ||
+      (item.aspect_ratio || '').toLowerCase().includes(q)
     );
   });
 
