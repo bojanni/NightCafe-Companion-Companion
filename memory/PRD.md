@@ -11,6 +11,7 @@ Browser (NightCafe.studio)
         ↕ chrome.runtime.onMessage
   └── Extension Popup (popup.js)     ← test, toggle, importeer
         ↕ fetch POST /api/import
+  └── Background (background.js)     ← bulk import tab management
 Local App (localhost:3000)
   └── FastAPI Backend (server.py)    ← ontvangt imports
   └── MongoDB                         ← slaat op
@@ -80,56 +81,57 @@ Local App (localhost:3000)
 - all_images, is_published, video_prompt, revised_prompt
 - initial_resolution, sampling_method, runtime, extracted_at, tags
 
-## Geïmplementeerd (Feb 2026)
+## Voltooid (Feb 2026)
 
-### Browser Extensie (`/app/extension/`)
-- Manifest V3 – Chrome + Firefox 128+
-- Content script met floating knop + toast
-- Popup met test verbinding, toggle, importeer
-- Published status detectie via "Unpublish" knop
+### Browser Extensie
+- [x] Manifest V3 – Chrome + Firefox 128+
+- [x] Content script met floating knop + toast
+- [x] Popup met test verbinding, toggle, importeer
+- [x] Published status detectie via "Unpublish" knop
+- [x] "Al geïmporteerd" status check
+- [x] **Bulk Import (lijst-pagina support)**
+  - Automatische detectie van profiel/lijst-pagina's
+  - "Importeer Alles" knop met aantal creaties
+  - Background script opent elke creatie in achtergrond-tab
+  - Volledige data extractie per creatie
+  - Duplicate check (overslaat al geïmporteerde items)
+  - Real-time voortgangsoverlay met stats en logboek
+  - Popup bulk import modus
 
-### Data Extractie (content.js)
-- Title, prompt, revised prompt, video prompt, start image
-- Model, initial resolution, aspect ratio, seed
-- Published state, gallery images, metadata (tags, sampling, runtime)
+### Data Extractie
+- [x] Title, prompt, revised prompt, video prompt, start image
+- [x] Model, initial resolution, aspect ratio, seed
+- [x] Published state, gallery images, metadata
 
-### Backend (`/app/backend/server.py`)
-- POST /api/import – ontvang en sla op (duplicate detectie via metadata.nightcafe_creation_id)
-- GET /api/import/status – check import status
-- GET /api/import/health – verbindingstest
-- GET /api/gallery-items – lijst items
-- GET /api/gallery-items/{id} – detail met _prompt
-- GET /api/gallery-items/stats/summary – statistieken
-- DELETE /api/gallery-items/{id} – verwijder item + prompt
-- GET /api/prompts – lijst prompts
+### Backend
+- [x] POST /api/import – ontvang en sla op (duplicate detectie)
+- [x] GET /api/import/status – check import status
+- [x] GET /api/import/health – verbindingstest
+- [x] GET /api/gallery-items – lijst items
+- [x] GET /api/gallery-items/{id} – detail met _prompt
+- [x] GET /api/gallery-items/stats/summary – statistieken
+- [x] DELETE /api/gallery-items/{id} – verwijder item + prompt
+- [x] GET /api/prompts – lijst prompts
 
-### React Frontend (`/app/frontend/src/`)
-- Gallery dashboard met statistieken
-- Zoekfunctie
-- Detail panel met alle velden
-- "Gepubliceerd" tekst-badge op kaarten
-- VIDEO badge, afbeeldingen-teller badge
-- Export JSON/CSV
-- Verwijder met bevestiging
+### Frontend Dashboard
+- [x] Gallery met statistieken
+- [x] Zoekfunctie
+- [x] Detail panel met alle velden
+- [x] "Gepubliceerd" tekst-badge
+- [x] Export JSON/CSV
+- [x] Verwijder met bevestiging
 
-## Voltooid
-- [x] Extensie met popup
-- [x] Content script met floating knop
-- [x] Data extractie (alle velden)
-- [x] Backend import/gallery/prompts endpoints
-- [x] Dashboard frontend
-- [x] Auto-mapping naar prompts + gallery_items
-- [x] Schema afgestemd op db-init.js (Feb 2026)
-- [x] Published badge verduidelijkt (tekst i.p.v. puntje)
-- [x] JSON/CSV export
-- [x] Already imported status detectie
+### Schema Update
+- [x] Database schema afgestemd op db-init.js
+- [x] Veldnamen hernoemd (text→content, start_image_url→start_image, etc.)
+- [x] NightCafe-specifieke data in metadata JSONB
+- [x] Frontend gesynchroniseerd
 
 ## Backlog
 
 ### P1
-- [ ] Meerdere creaties tegelijk importeren (list-pagina support)
 - [ ] Extensie packagen als .zip voor permanente Firefox installatie
-- [ ] Auto-sync optie
+- [ ] Auto-sync optie (periodiek nieuwe creaties importeren)
 
 ### P2
 - [ ] Zoekopdrachten & filters (op model, datum, gepubliceerd)
