@@ -415,28 +415,29 @@ function App() {
 
             <div className="detail-fields">
 
-              {/* Prompts */}
-              {selected.creationType === 'video' && (
+              {/* Type badge */}
+              {selected.creation_type === 'video' && (
                 <div className="type-badge-row" data-testid="detail-creation-type">
                   <span className="type-badge type-video">VIDEO</span>
                 </div>
               )}
-              {selected.prompt && selected.creationType !== 'video' && (
+
+              {/* Prompt ID koppeling */}
+              {selected.prompt_id && (
+                <div className="prompt-id-row" data-testid="detail-prompt-id-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  <span>prompt_id: <code>{selected.prompt_id.slice(0, 16)}…</code></span>
+                </div>
+              )}
+
+              {/* Text Prompt */}
+              {selected.prompt_used && selected.creation_type !== 'video' && (
                 <div className="detail-field" data-testid="detail-prompt">
                   <label>Text Prompt</label>
-                  <p>{selected.prompt}</p>
-                </div>
-              )}
-              {selected.videoPrompt && (
-                <div className="detail-field" data-testid="detail-video-prompt">
-                  <label>Video Prompt</label>
-                  <p>{selected.videoPrompt}</p>
-                </div>
-              )}
-              {selected.creationType === 'video' && !selected.videoPrompt && selected.prompt && (
-                <div className="detail-field" data-testid="detail-prompt">
-                  <label>Prompt</label>
-                  <p>{selected.prompt}</p>
+                  <p>{selected.prompt_used}</p>
                 </div>
               )}
               {selected.metadata?.promptHidden && (
@@ -445,116 +446,135 @@ function App() {
                   <p className="muted-text">Verborgen door de auteur</p>
                 </div>
               )}
-              {selected.revisedPrompt && (
+              {/* Video Prompt */}
+              {selected.video_prompt && (
+                <div className="detail-field" data-testid="detail-video-prompt">
+                  <label>Video Prompt</label>
+                  <p>{selected.video_prompt}</p>
+                </div>
+              )}
+              {selected.creation_type === 'video' && !selected.video_prompt && selected.prompt_used && (
+                <div className="detail-field" data-testid="detail-prompt">
+                  <label>Prompt</label>
+                  <p>{selected.prompt_used}</p>
+                </div>
+              )}
+              {/* Revised Prompt */}
+              {selected.revised_prompt && (
                 <div className="detail-field" data-testid="detail-revised-prompt">
                   <label>Revised Prompt</label>
-                  <p>{selected.revisedPrompt}</p>
+                  <p>{selected.revised_prompt}</p>
                 </div>
               )}
 
               {/* Start Image */}
-              {selected.startImageUrl && (
+              {selected.start_image_url && (
                 <div className="detail-field" data-testid="detail-start-image">
                   <label>Start Image</label>
                   <div className="start-image-wrap">
-                    <img
-                      src={selected.startImageUrl}
-                      alt="Start Image"
-                      className="start-image"
-                      onError={e => { e.target.style.display='none'; }}
-                    />
-                    <a href={selected.startImageUrl} target="_blank" rel="noopener noreferrer" className="start-image-link" data-testid="detail-start-image-link">
-                      Origineel &#8599;
-                    </a>
+                    <img src={selected.start_image_url} alt="Start Image" className="start-image"
+                         onError={e => { e.target.style.display='none'; }}/>
+                    <a href={selected.start_image_url} target="_blank" rel="noopener noreferrer"
+                       className="start-image-link" data-testid="detail-start-image-link">Origineel &#8599;</a>
                   </div>
                 </div>
               )}
 
-              {/* Creation settings grid */}
+              {/* Settings grid – velden uit de prompts tabel */}
               <div className="settings-grid">
-                {selected.model && (
+                {(selected._prompt?.model || selected.model) && (
                   <div className="setting-item" data-testid="detail-model">
                     <label>Model</label>
-                    <span>{selected.model}</span>
+                    <span>{selected._prompt?.model || selected.model}</span>
                   </div>
                 )}
-                {selected.initialResolution && (
+                {(selected._prompt?.initial_resolution) && (
                   <div className="setting-item" data-testid="detail-resolution">
                     <label>Initial Resolution</label>
-                    <span>{selected.initialResolution}</span>
+                    <span>{selected._prompt.initial_resolution}</span>
                   </div>
                 )}
-                {selected.aspectRatio && (
+                {(selected._prompt?.aspect_ratio) && (
                   <div className="setting-item" data-testid="detail-aspect-ratio">
                     <label>Aspect Ratio</label>
-                    <span>{selected.aspectRatio}</span>
+                    <span>{selected._prompt.aspect_ratio}</span>
                   </div>
                 )}
-                {selected.seed && (
+                {(selected._prompt?.seed) && (
                   <div className="setting-item" data-testid="detail-seed">
                     <label>Seed</label>
-                    <span className="mono-small">{selected.seed}</span>
+                    <span className="mono-small">{selected._prompt.seed}</span>
                   </div>
                 )}
-                {selected.metadata?.samplingMethod && (
+                {selected._prompt?.sampling_method && (
                   <div className="setting-item" data-testid="detail-sampling">
                     <label>Sampling Method</label>
-                    <span>{selected.metadata.samplingMethod}</span>
+                    <span>{selected._prompt.sampling_method}</span>
                   </div>
                 )}
-                {selected.metadata?.runtime && (
+                {selected._prompt?.runtime && (
                   <div className="setting-item" data-testid="detail-runtime">
                     <label>Runtime</label>
-                    <span>{selected.metadata.runtime}</span>
+                    <span>{selected._prompt.runtime}</span>
                   </div>
                 )}
-                {selected.metadata?.overallPromptWeight && (
-                  <div className="setting-item" data-testid="detail-prompt-weight">
-                    <label>Prompt Weight</label>
-                    <span>{selected.metadata.overallPromptWeight}</span>
+                {selected._prompt?.metadata?.duration && (
+                  <div className="setting-item" data-testid="detail-duration">
+                    <label>Duratie</label>
+                    <span>{selected._prompt.metadata.duration}</span>
                   </div>
                 )}
               </div>
 
               {/* Tags */}
-              {selected.metadata?.tags?.length > 0 && (
+              {selected._prompt?.metadata?.tags?.length > 0 && (
                 <div className="detail-field" data-testid="detail-tags">
                   <label>Tags</label>
                   <div className="tags-row">
-                    {selected.metadata.tags.map(tag => (
+                    {selected._prompt.metadata.tags.map(tag => (
                       <span key={tag} className="tag-pill">{tag}</span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Source URL */}
+              {/* App-schema velden */}
+              <div className="settings-grid">
+                <div className="setting-item" data-testid="detail-character-id">
+                  <label>character_id</label>
+                  <span className="muted-text">{selected.character_id || '—'}</span>
+                </div>
+                <div className="setting-item" data-testid="detail-rating">
+                  <label>rating</label>
+                  <span className="muted-text">{selected.rating ?? '—'}</span>
+                </div>
+                <div className="setting-item" data-testid="detail-collection-id">
+                  <label>collection_id</label>
+                  <span className="muted-text">{selected.collection_id || '—'}</span>
+                </div>
+              </div>
+
+              {/* Source */}
               <div className="detail-field" data-testid="detail-url">
                 <label>NightCafe URL</label>
-                <a href={selected.url} target="_blank" rel="noopener noreferrer" className="detail-link">
-                  {selected.url}
+                <a href={selected.source_url} target="_blank" rel="noopener noreferrer" className="detail-link">
+                  {selected.source_url}
                 </a>
               </div>
-
-              {/* Creation ID */}
-              {selected.creationId && (
+              {selected.nightcafe_creation_id && (
                 <div className="detail-field" data-testid="detail-creation-id">
                   <label>Creation ID</label>
-                  <span className="mono-small">{selected.creationId}</span>
+                  <span className="mono-small">{selected.nightcafe_creation_id}</span>
                 </div>
               )}
-
-              {/* Import time */}
               <div className="detail-field" data-testid="detail-imported-at">
-                <label>Geimporteerd op</label>
-                <p>{formatDate(selected.importedAt)}</p>
+                <label>Geïmporteerd op</label>
+                <p>{formatDate(selected.imported_at)}</p>
               </div>
-
-              {/* Images count */}
-              {(selected.allImages?.length || 0) > 1 && (
+              {(selected.all_images?.length || 0) > 1 && (
                 <div className="detail-field" data-testid="detail-images-count">
                   <label>Afbeeldingen</label>
-                  <p>{selected.allImages.length} varianten geimporteerd</p>
+                  <p>{selected.all_images.length} varianten</p>
                 </div>
               )}
 
