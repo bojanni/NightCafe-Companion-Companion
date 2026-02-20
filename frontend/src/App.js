@@ -478,13 +478,13 @@ function App() {
               )}
 
               {/* Start Image */}
-              {selected.start_image_url && (
+              {selected.start_image && (
                 <div className="detail-field" data-testid="detail-start-image">
                   <label>Start Image</label>
                   <div className="start-image-wrap">
-                    <img src={selected.start_image_url} alt="Start Image" className="start-image"
+                    <img src={selected.start_image} alt="Start Image" className="start-image"
                          onError={e => { e.target.style.display='none'; }}/>
-                    <a href={selected.start_image_url} target="_blank" rel="noopener noreferrer"
+                    <a href={selected.start_image} target="_blank" rel="noopener noreferrer"
                        className="start-image-link" data-testid="detail-start-image-link">Origineel &#8599;</a>
                   </div>
                 </div>
@@ -498,40 +498,40 @@ function App() {
                     <span>{selected._prompt?.model || selected.model}</span>
                   </div>
                 )}
-                {(selected._prompt?.initial_resolution) && (
+                {selected.metadata?.initial_resolution && (
                   <div className="setting-item" data-testid="detail-resolution">
                     <label>Initial Resolution</label>
-                    <span>{selected._prompt.initial_resolution}</span>
+                    <span>{selected.metadata.initial_resolution}</span>
                   </div>
                 )}
-                {(selected._prompt?.aspect_ratio) && (
+                {(selected._prompt?.aspect_ratio || selected.aspect_ratio) && (
                   <div className="setting-item" data-testid="detail-aspect-ratio">
                     <label>Aspect Ratio</label>
-                    <span>{selected._prompt.aspect_ratio}</span>
+                    <span>{selected._prompt?.aspect_ratio || selected.aspect_ratio}</span>
                   </div>
                 )}
-                {(selected._prompt?.seed) && (
+                {(selected._prompt?.seed != null) && (
                   <div className="setting-item" data-testid="detail-seed">
                     <label>Seed</label>
                     <span className="mono-small">{selected._prompt.seed}</span>
                   </div>
                 )}
-                {selected._prompt?.sampling_method && (
+                {selected.metadata?.sampling_method && (
                   <div className="setting-item" data-testid="detail-sampling">
                     <label>Sampling Method</label>
-                    <span>{selected._prompt.sampling_method}</span>
+                    <span>{selected.metadata.sampling_method}</span>
                   </div>
                 )}
-                {selected._prompt?.runtime && (
+                {selected.metadata?.runtime && (
                   <div className="setting-item" data-testid="detail-runtime">
                     <label>Runtime</label>
-                    <span>{selected._prompt.runtime}</span>
+                    <span>{selected.metadata.runtime}</span>
                   </div>
                 )}
-                {selected._prompt?.metadata?.duration && (
+                {selected.metadata?.duration && (
                   <div className="setting-item" data-testid="detail-duration">
                     <label>Duratie</label>
-                    <span>{selected._prompt.metadata.duration}</span>
+                    <span>{selected.metadata.duration}</span>
                   </div>
                 )}
               </div>
