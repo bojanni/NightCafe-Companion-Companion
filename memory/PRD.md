@@ -83,7 +83,8 @@ Endpoints:
 - [x] Main image via mdi #e64d6a
 - [x] Backend ontvanger met alle velden
 - [x] Dashboard frontend
-- [x] Video creatie support: Video Prompt label, Start Image extractie, "Show full prompt" klik, creationType badge
+- [x] Auto-mapping: prompt → `prompts` collectie, imageUrl → `gallery_items.image_url`, `prompt_id` koppeling
+- [x] gallery_items schema matcht app-schema: title, image_url, prompt_used, prompt_id, character_id, rating, collection_id
 
 ### P1 (next steps)
 - [ ] Meerdere creaties tegelijk importeren (list-pagina support)
