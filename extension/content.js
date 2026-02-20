@@ -115,12 +115,19 @@ if (window.__ncImporterLoaded) {
       extractFieldFuzzy('revised', settingsCtx) ||
       null;
 
-    // ── 8. Start Image ────────────────────────────────────────────────────────
+    // ── 8. Start Image – werkt voor zowel afbeelding als video ───────────────
+    // NightCafe gebruikt meerdere labels afhankelijk van het model/type
     data.startImageUrl =
       extractImageAfterLabel('Start Image', settingsCtx) ||
       extractImageAfterLabel('Start image', settingsCtx) ||
+      extractImageAfterLabel('Init Image', settingsCtx) ||
+      extractImageAfterLabel('Initial Image', settingsCtx) ||
+      extractImageAfterLabel('Source Image', settingsCtx) ||
       extractImageAfterLabel('Reference Image', settingsCtx) ||
       extractImageAfterLabel('Input Image', settingsCtx) ||
+      extractImageAfterLabel('Img2Img Image', settingsCtx) ||
+      extractImageAfterLabel('Style Image', settingsCtx) ||
+      extractImageAfterLabelFuzzy('start', settingsCtx) ||
       null;
 
     // ── 9. Model ──────────────────────────────────────────────────────────────
