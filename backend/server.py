@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,6 +10,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Any, Dict
 import uuid
 from datetime import datetime, timezone
+import httpx
 
 
 ROOT_DIR = Path(__file__).parent
