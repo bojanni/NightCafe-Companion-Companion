@@ -12,9 +12,12 @@ if (window.__ncImporterLoaded) {
   // Load initial toggle state and check status on page load
   chrome.storage.sync.get(['pageButtonEnabled'], (data) => {
     if (data.pageButtonEnabled !== false) {
-      injectButton();
-      // Check if this creation was already imported
-      scheduleStatusCheck();
+      if (isListPage()) {
+        injectBulkButton();
+      } else {
+        injectButton();
+        scheduleStatusCheck();
+      }
     }
   });
 
