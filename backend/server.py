@@ -223,16 +223,16 @@ async def import_health():
 async def check_import_status(creationId: str):
     """Controleer of een creatie al geïmporteerd is (gebruikt door de browser extensie)."""
     item = await db.gallery_items.find_one(
-        {"nightcafe_creation_id": creationId},
-        {"_id": 0, "id": 1, "title": 1, "imported_at": 1, "creation_type": 1}
+        {"metadata.nightcafe_creation_id": creationId},
+        {"_id": 0, "id": 1, "title": 1, "created_at": 1, "media_type": 1}
     )
     if item:
         return {
             "exists": True,
             "id": item.get("id"),
             "title": item.get("title"),
-            "importedAt": item.get("imported_at"),
-            "creationType": item.get("creation_type"),
+            "importedAt": item.get("created_at"),
+            "creationType": item.get("media_type"),
         }
     return {"exists": False}
 
@@ -243,11 +243,11 @@ async def import_creation(creation: CreationImport):
       - prompts        → prompt-tekst + AI-instellingen
       - gallery_items  → afbeelding + koppeling prompt_id (matcht app-schema)
     """
-    # ── Duplicate check op nightcafe_creation_id ──
+    # ── Duplicate check op nightcafe_creation_id (nu in metadata) ──
     if creation.creationId:
         existing = await db.gallery_items.find_one(
-            {"nightcafe_creation_id": creation.creationId},
-            {"_id": 0, "id": 1, "title": 1, "imported_at": 1}
+            {"metadata.nightcafe_creation_id": creation.creationId},
+            {"_id": 0, "id": 1, "title": 1, "created_at": 1}
         )
         if existing:
             logger.info(f"Duplicate: {creation.creationId}")
@@ -291,8 +291,8 @@ async def get_gallery_stats():
     total = await db.gallery_items.count_documents({})
     with_image = await db.gallery_items.count_documents({"image_url": {"$ne": None}})
     with_prompt = await db.gallery_items.count_documents({"prompt_used": {"$ne": None}})
-    with_multi = await db.gallery_items.count_documents({"all_images.1": {"$exists": True}})
-    published = await db.gallery_items.count_documents({"is_published": True})
+    with_multi = await db.gallery_items.count_documents({"metadata.all_images.1": {"$exists": True}})
+    published = await db.gallery_items.count_documents({"metadata.is_published": True})
     total_prompts = await db.prompts.count_documents({})
     return {
         "total": total,
@@ -305,7 +305,7 @@ async def get_gallery_stats():
 
 @api_router.get("/gallery-items")
 async def list_gallery_items():
-    items = await db.gallery_items.find({}, {"_id": 0}).sort("imported_at", -1).to_list(500)
+    items = await db.gallery_items.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return items
 
 @api_router.get("/gallery-items/{item_id}")
