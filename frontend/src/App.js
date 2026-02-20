@@ -379,7 +379,7 @@ function App() {
             <div className="detail-header">
               <div className="detail-title-row">
                 <h2 data-testid="detail-title">{selected.title || 'Naamloze creatie'}</h2>
-                {selected.is_published && (
+                {selected.metadata?.is_published && (
                   <span className="pub-badge" data-testid="detail-published-badge">Gepubliceerd</span>
                 )}
               </div>
@@ -426,7 +426,7 @@ function App() {
             <div className="detail-fields">
 
               {/* Type badge */}
-              {selected.creation_type === 'video' && (
+              {selected.media_type === 'video' && (
                 <div className="type-badge-row" data-testid="detail-creation-type">
                   <span className="type-badge type-video">VIDEO</span>
                 </div>
@@ -444,7 +444,7 @@ function App() {
               )}
 
               {/* Text Prompt */}
-              {selected.prompt_used && selected.creation_type !== 'video' && (
+              {selected.prompt_used && selected.media_type !== 'video' && (
                 <div className="detail-field" data-testid="detail-prompt">
                   <label>Text Prompt</label>
                   <p>{selected.prompt_used}</p>
@@ -457,23 +457,23 @@ function App() {
                 </div>
               )}
               {/* Video Prompt */}
-              {selected.video_prompt && (
+              {selected.metadata?.video_prompt && (
                 <div className="detail-field" data-testid="detail-video-prompt">
                   <label>Video Prompt</label>
-                  <p>{selected.video_prompt}</p>
+                  <p>{selected.metadata.video_prompt}</p>
                 </div>
               )}
-              {selected.creation_type === 'video' && !selected.video_prompt && selected.prompt_used && (
+              {selected.media_type === 'video' && !selected.metadata?.video_prompt && selected.prompt_used && (
                 <div className="detail-field" data-testid="detail-prompt">
                   <label>Prompt</label>
                   <p>{selected.prompt_used}</p>
                 </div>
               )}
               {/* Revised Prompt */}
-              {selected.revised_prompt && (
+              {selected._prompt?.revised_prompt && (
                 <div className="detail-field" data-testid="detail-revised-prompt">
                   <label>Revised Prompt</label>
-                  <p>{selected.revised_prompt}</p>
+                  <p>{selected._prompt.revised_prompt}</p>
                 </div>
               )}
 
