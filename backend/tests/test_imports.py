@@ -66,6 +66,41 @@ class TestImports:
         assert isinstance(data, list)
         assert len(data) >= 1
 
+    def test_post_import_new_fields(self):
+        """Test all new fields: revisedPrompt, allImages, initialResolution, aspectRatio, seed, isPublished"""
+        payload = {
+            "url": "https://creator.nightcafe.studio/creation/TEST_newfields",
+            "creationId": "TEST_newfields_001",
+            "title": "TEST_NewFields",
+            "prompt": "test prompt",
+            "revisedPrompt": "revised test prompt",
+            "allImages": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
+            "initialResolution": "512x512",
+            "aspectRatio": "16:9",
+            "seed": "12345678",
+            "isPublished": True,
+            "model": "SDXL"
+        }
+        r = requests.post(f"{BASE_URL}/api/import", json=payload)
+        assert r.status_code == 201
+        data = r.json()
+        assert data.get('success') is True
+        new_id = data['id']
+
+        # Verify fields persisted via GET
+        r2 = requests.get(f"{BASE_URL}/api/imports/{new_id}")
+        assert r2.status_code == 200
+        item = r2.json()
+        assert item['revisedPrompt'] == 'revised test prompt'
+        assert item['initialResolution'] == '512x512'
+        assert item['aspectRatio'] == '16:9'
+        assert item['seed'] == '12345678'
+        assert item['isPublished'] is True
+        assert len(item['allImages']) == 2
+
+        # Cleanup
+        requests.delete(f"{BASE_URL}/api/imports/{new_id}")
+
     def test_get_stats(self):
         r = requests.get(f"{BASE_URL}/api/imports/stats/summary")
         assert r.status_code == 200
@@ -73,6 +108,8 @@ class TestImports:
         assert 'total' in data
         assert 'withImage' in data
         assert 'withPrompt' in data
+        assert 'withMultipleImages' in data
+        assert 'published' in data
         assert data['total'] >= 1
 
     def test_delete_import(self):
