@@ -350,7 +350,7 @@ function App() {
                 </div>
                 <div className="card-body">
                   <h3 className="card-title" title={item.title}>
-                    {item.title || item.nightcafe_creation_id || 'Naamloze creatie'}
+                    {item.title || item.metadata?.nightcafe_creation_id || 'Naamloze creatie'}
                   </h3>
                   {item.prompt_used && (
                     <p className="card-prompt">{item.prompt_used.slice(0, 90)}{item.prompt_used.length > 90 ? '...' : ''}</p>
