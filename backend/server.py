@@ -50,95 +50,126 @@ class CreationImport(BaseModel):
     extractedAt: Optional[str] = None
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# DB MODELS  (snake_case – matcht de app-database schema)
+# DB MODELS  (matcht db-init.js schema exact)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class Prompt(BaseModel):
-    """Prompts tabel – bevat de prompt-tekst en AI-instellingen."""
+    """Prompts tabel – matcht db-init.js schema."""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    text: Optional[str] = None                   # Text Prompt / Video Prompt
-    revised_text: Optional[str] = None           # Revised Prompt (DALL-E etc.)
-    model: Optional[str] = None
-    seed: Optional[str] = None
-    aspect_ratio: Optional[str] = None
-    initial_resolution: Optional[str] = None
-    sampling_method: Optional[str] = None
-    runtime: Optional[str] = None
-    creation_type: Optional[str] = None          # 'image' | 'video'
-    source: str = "NightCafe Studio"
-    source_url: Optional[str] = None
-    nightcafe_creation_id: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    user_id: Optional[str] = None
+    title: Optional[str] = None
+    content: Optional[str] = None
+    notes: Optional[str] = None
+    rating: float = 0
+    is_favorite: bool = False
+    is_template: bool = False
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    model: Optional[str] = None
+    category: Optional[str] = None
+    revised_prompt: Optional[str] = None
+    seed: Optional[int] = None
+    aspect_ratio: Optional[str] = None
+    use_custom_aspect_ratio: bool = False
+    gallery_item_id: Optional[str] = None
+    use_count: int = 0
+    last_used_at: Optional[str] = None
+    suggested_model: Optional[str] = None
 
 class GalleryItem(BaseModel):
-    """gallery_items tabel – matcht de verwachte app-schema exact."""
+    """gallery_items tabel – matcht db-init.js schema."""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    # ── App-schema velden (exact zoals de app verwacht) ──
+    user_id: Optional[str] = None
     title: Optional[str] = None
     image_url: Optional[str] = None
     prompt_used: Optional[str] = None
+    model_used: Optional[str] = None
+    notes: Optional[str] = None
+    is_favorite: bool = False
+    aspect_ratio: Optional[str] = None
+    use_custom_aspect_ratio: bool = False
+    start_image: Optional[str] = None
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     prompt_id: Optional[str] = None
-    character_id: Optional[str] = None          # Niet uit NightCafe, blijft null
-    rating: Optional[float] = None              # Niet uit NightCafe, blijft null
-    collection_id: Optional[str] = None         # Niet uit NightCafe, blijft null
-    # ── Uitgebreide NightCafe velden ──
-    all_images: Optional[List[str]] = None
-    start_image_url: Optional[str] = None
-    is_published: Optional[bool] = None
-    creation_type: Optional[str] = None
-    video_prompt: Optional[str] = None
-    revised_prompt: Optional[str] = None
-    source: str = "NightCafe Studio"
-    source_url: Optional[str] = None
-    nightcafe_creation_id: Optional[str] = None
-    imported_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    rating: float = 0
+    model: Optional[str] = None
+    local_path: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    width: Optional[int] = None
+    height: Optional[int] = None
+    character_id: Optional[str] = None
+    collection_id: Optional[str] = None
+    media_type: str = "image"
+    video_url: Optional[str] = None
+    video_local_path: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    duration_seconds: Optional[int] = None
+    storage_mode: str = "url"
 
 # ─── Field mapping helper ──────────────────────────────────────────────────────
 
-def map_to_db(creation: CreationImport, prompt_id: str) -> tuple[dict, dict]:
+def _parse_seed(val: Optional[str]) -> Optional[int]:
+    if val is None:
+        return None
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return None
+
+
+def map_to_db(creation: CreationImport, gallery_id: str) -> tuple[dict, dict]:
     """
-    Vertaalt de camelCase extensie-data naar twee snake_case DB-documenten:
-    (prompt_doc, gallery_item_doc)
+    Vertaalt camelCase extensie-data naar db-init.js schema documenten.
+    NightCafe-specifieke data wordt opgeslagen in metadata (gallery_items) of
+    als extra velden (prompts) zodat niets verloren gaat.
     """
-    meta = creation.metadata or {}
+    ext_meta = creation.metadata or {}
     prompt_text = creation.prompt or creation.videoPrompt
 
     prompt = Prompt(
-        text=prompt_text,
-        revised_text=creation.revisedPrompt,
+        title=creation.title,
+        content=prompt_text,
+        revised_prompt=creation.revisedPrompt,
         model=creation.model,
-        seed=creation.seed,
+        seed=_parse_seed(creation.seed),
         aspect_ratio=creation.aspectRatio,
-        initial_resolution=creation.initialResolution,
-        sampling_method=meta.get('samplingMethod'),
-        runtime=meta.get('runtime'),
-        creation_type=creation.creationType,
-        source=creation.source or "NightCafe Studio",
-        source_url=creation.url,
-        nightcafe_creation_id=creation.creationId,
-        metadata={k: v for k, v in meta.items()
-                  if k not in ('samplingMethod', 'runtime', 'overallPromptWeight')},
+        gallery_item_id=gallery_id,
     )
 
+    # NightCafe-specifieke metadata voor gallery_items
+    nc_metadata = {
+        "source": creation.source or "NightCafe Studio",
+        "source_url": creation.url,
+        "nightcafe_creation_id": creation.creationId,
+        "all_images": creation.allImages,
+        "is_published": creation.isPublished,
+        "video_prompt": creation.videoPrompt,
+        "revised_prompt": creation.revisedPrompt,
+        "initial_resolution": creation.initialResolution,
+        "sampling_method": ext_meta.get("samplingMethod"),
+        "runtime": ext_meta.get("runtime"),
+        "extracted_at": creation.extractedAt,
+    }
+    # Voeg overige extensie-metadata toe
+    for k, v in ext_meta.items():
+        if k not in ("samplingMethod", "runtime") and k not in nc_metadata:
+            nc_metadata[k] = v
+    # Verwijder None waarden
+    nc_metadata = {k: v for k, v in nc_metadata.items() if v is not None}
+
     gallery_item = GalleryItem(
-        id=prompt_id,              # Gebruik hetzelfde ID voor de koppeling
+        id=gallery_id,
         title=creation.title,
         image_url=creation.imageUrl,
         prompt_used=prompt_text,
+        model_used=creation.model,
+        model=creation.model,
+        aspect_ratio=creation.aspectRatio,
+        start_image=creation.startImageUrl,
         prompt_id=prompt.id,
-        character_id=None,
-        rating=None,
-        collection_id=None,
-        all_images=creation.allImages,
-        start_image_url=creation.startImageUrl,
-        is_published=creation.isPublished,
-        creation_type=creation.creationType,
-        video_prompt=creation.videoPrompt,
-        revised_prompt=creation.revisedPrompt,
-        source=creation.source or "NightCafe Studio",
-        source_url=creation.url,
-        nightcafe_creation_id=creation.creationId,
+        metadata=nc_metadata,
+        media_type=creation.creationType or "image",
     )
 
     return prompt.model_dump(), gallery_item.model_dump()
