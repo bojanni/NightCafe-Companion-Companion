@@ -39,12 +39,15 @@ class CreationImport(BaseModel):
     url: str
     creationId: Optional[str] = None
     title: Optional[str] = None
+    creationType: Optional[str] = None   # 'image' | 'video'
     # Prompts
     prompt: Optional[str] = None
+    videoPrompt: Optional[str] = None
     revisedPrompt: Optional[str] = None
     # Images
     imageUrl: Optional[str] = None
     allImages: Optional[List[str]] = None
+    startImageUrl: Optional[str] = None  # Start Image / reference image
     # Creation settings
     model: Optional[str] = None
     style: Optional[str] = None
