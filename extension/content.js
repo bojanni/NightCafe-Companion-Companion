@@ -785,4 +785,237 @@ if (window.__ncImporterLoaded) {
     }, 3500);
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // LIST PAGE DETECTION & BULK IMPORT
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  let bulkBtn = null;
+  let progressOverlay = null;
+  let bulkRunning = false;
+
+  function isListPage() {
+    const path = window.location.pathname;
+    // Niet op een individuele creatie-pagina
+    if (/\/creation\/[a-zA-Z0-9_-]+/.test(path)) return false;
+    // Op een profiel-, explore- of creaties-pagina
+    if (/^\/(u\/|my-creations|explore|feed)/i.test(path)) return true;
+    // Fallback: check of er meerdere creatie-links op de pagina staan
+    const links = document.querySelectorAll('a[href*="/creation/"]');
+    return links.length >= 3;
+  }
+
+  function extractCreationLinks() {
+    const links = document.querySelectorAll('a[href*="/creation/"]');
+    const seen = new Set();
+    const results = [];
+    for (const link of links) {
+      const href = link.getAttribute('href');
+      const match = href.match(/\/creation\/([a-zA-Z0-9_-]+)/);
+      if (!match) continue;
+      const id = match[1];
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const fullUrl = new URL(href, window.location.origin).href;
+
+      // Probeer titel en thumbnail van de kaart te halen
+      const card = link.closest('[class*="card"], [class*="Card"], [class*="creation"], [class*="item"]') || link;
+      const img = card.querySelector('img');
+      const titleEl = card.querySelector('h2, h3, h4, [class*="title"], [class*="name"]');
+
+      results.push({
+        url: fullUrl,
+        creationId: id,
+        thumbnail: img?.src || null,
+        title: titleEl?.textContent?.trim() || null
+      });
+    }
+    return results;
+  }
+
+  // ─── Bulk Import Knop ─────────────────────────────────────────────────────────
+
+  function injectBulkButton() {
+    if (bulkBtn || bulkRunning) return;
+    const links = extractCreationLinks();
+    if (links.length === 0) {
+      // Wacht even tot de pagina geladen is en probeer opnieuw
+      setTimeout(() => {
+        if (bulkBtn || bulkRunning) return;
+        const retry = extractCreationLinks();
+        if (retry.length > 0) createBulkButton(retry.length);
+      }, 2000);
+      return;
+    }
+    createBulkButton(links.length);
+  }
+
+  function createBulkButton(count) {
+    if (bulkBtn) return;
+    bulkBtn = document.createElement('button');
+    bulkBtn.id = 'nc-bulk-import-btn';
+    bulkBtn.setAttribute('data-testid', 'nc-bulk-import-btn');
+    bulkBtn.title = `Importeer alle ${count} zichtbare creaties`;
+    setBulkButtonIdle(count);
+    bulkBtn.addEventListener('click', handleBulkImport);
+    document.body.appendChild(bulkBtn);
+  }
+
+  function setBulkButtonIdle(count) {
+    if (!bulkBtn) return;
+    const c = count || extractCreationLinks().length;
+    bulkBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span>Importeer Alles</span>
+      <span class="nc-bulk-count">${c}</span>`;
+  }
+
+  function removeBulkButton() {
+    if (bulkBtn) { bulkBtn.remove(); bulkBtn = null; }
+  }
+
+  // ─── Bulk Import Flow ─────────────────────────────────────────────────────────
+
+  async function handleBulkImport() {
+    if (bulkRunning) return;
+
+    const creations = extractCreationLinks();
+    if (creations.length === 0) {
+      showToast('Geen creaties gevonden op deze pagina', 'error');
+      return;
+    }
+
+    bulkRunning = true;
+    if (bulkBtn) {
+      bulkBtn.disabled = true;
+      bulkBtn.classList.add('loading');
+      bulkBtn.innerHTML = `<span class="nc-spinner"></span><span>Bezig...</span>`;
+    }
+
+    showProgressOverlay(creations.length);
+
+    // Stuur creatie-links naar background voor verwerking
+    chrome.runtime.sendMessage({
+      action: 'startBulkImport',
+      creations: creations
+    });
+  }
+
+  // ─── Voortgangsoverlay ────────────────────────────────────────────────────────
+
+  function showProgressOverlay(total) {
+    if (progressOverlay) progressOverlay.remove();
+
+    progressOverlay = document.createElement('div');
+    progressOverlay.id = 'nc-progress-overlay';
+    progressOverlay.innerHTML = `
+      <div class="nc-progress-header">
+        <span class="nc-progress-title">Bulk Import</span>
+        <span class="nc-progress-counter" data-testid="bulk-progress-counter">0 / ${total}</span>
+      </div>
+      <div class="nc-progress-bar-bg">
+        <div class="nc-progress-bar-fill" data-testid="bulk-progress-bar" style="width: 0%"></div>
+      </div>
+      <div class="nc-progress-status" data-testid="bulk-progress-status">Starten...</div>
+      <div class="nc-progress-stats">
+        <span class="nc-stat nc-stat-ok" data-testid="bulk-stat-imported">0 geimporteerd</span>
+        <span class="nc-stat nc-stat-skip" data-testid="bulk-stat-skipped">0 overgeslagen</span>
+        <span class="nc-stat nc-stat-err" data-testid="bulk-stat-errors">0 fouten</span>
+      </div>
+      <div class="nc-progress-log" data-testid="bulk-progress-log"></div>`;
+    document.body.appendChild(progressOverlay);
+    requestAnimationFrame(() => progressOverlay.classList.add('nc-progress-show'));
+  }
+
+  // Stats bijhouden
+  let bulkStats = { imported: 0, skipped: 0, errors: 0 };
+
+  function updateProgressOverlay(msg) {
+    if (!progressOverlay) return;
+
+    const pct = Math.round((msg.current / msg.total) * 100);
+    const bar = progressOverlay.querySelector('.nc-progress-bar-fill');
+    const counter = progressOverlay.querySelector('.nc-progress-counter');
+    const status = progressOverlay.querySelector('.nc-progress-status');
+    const log = progressOverlay.querySelector('.nc-progress-log');
+
+    if (bar) bar.style.width = pct + '%';
+    if (counter) counter.textContent = `${msg.current} / ${msg.total}`;
+
+    // Update stats
+    if (msg.status === 'imported') bulkStats.imported++;
+    else if (msg.status === 'skipped' || msg.status === 'duplicate') bulkStats.skipped++;
+    else if (msg.status === 'error') bulkStats.errors++;
+
+    const statOk = progressOverlay.querySelector('.nc-stat-ok');
+    const statSkip = progressOverlay.querySelector('.nc-stat-skip');
+    const statErr = progressOverlay.querySelector('.nc-stat-err');
+    if (statOk) statOk.textContent = `${bulkStats.imported} geimporteerd`;
+    if (statSkip) statSkip.textContent = `${bulkStats.skipped} overgeslagen`;
+    if (statErr) statErr.textContent = `${bulkStats.errors} fouten`;
+
+    // Status tekst
+    const title = msg.title || msg.creationId || '';
+    const shortTitle = title.length > 35 ? title.slice(0, 35) + '...' : title;
+
+    const statusIcon = msg.status === 'importing' ? '...'
+      : msg.status === 'imported' ? '+'
+      : msg.status === 'skipped' || msg.status === 'duplicate' ? '-'
+      : msg.status === 'checking' ? '?'
+      : msg.status === 'error' ? '!' : '>';
+
+    if (status) {
+      if (msg.status === 'importing') status.textContent = `Importeren: ${shortTitle}`;
+      else if (msg.status === 'checking') status.textContent = `Controleren: ${shortTitle}`;
+      else if (msg.status === 'imported') status.textContent = `Klaar: ${shortTitle}`;
+      else if (msg.status === 'skipped' || msg.status === 'duplicate') status.textContent = `Overgeslagen: ${shortTitle}`;
+      else if (msg.status === 'error') status.textContent = `Fout: ${shortTitle}`;
+    }
+
+    // Log toevoegen
+    if (log && msg.status !== 'checking') {
+      const entry = document.createElement('div');
+      entry.className = `nc-log-entry nc-log-${msg.status}`;
+      entry.textContent = `[${statusIcon}] ${shortTitle}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  function completeBulkImport(msg) {
+    bulkRunning = false;
+
+    if (progressOverlay) {
+      const status = progressOverlay.querySelector('.nc-progress-status');
+      const bar = progressOverlay.querySelector('.nc-progress-bar-fill');
+      if (bar) bar.style.width = '100%';
+      if (status) status.textContent = `Klaar! ${bulkStats.imported} geimporteerd, ${bulkStats.skipped} overgeslagen, ${bulkStats.errors} fouten`;
+
+      // Sluitknop toevoegen
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'nc-progress-close';
+      closeBtn.textContent = 'Sluiten';
+      closeBtn.setAttribute('data-testid', 'bulk-progress-close');
+      closeBtn.addEventListener('click', () => {
+        progressOverlay?.remove();
+        progressOverlay = null;
+        bulkStats = { imported: 0, skipped: 0, errors: 0 };
+      });
+      progressOverlay.appendChild(closeBtn);
+    }
+
+    if (bulkBtn) {
+      bulkBtn.disabled = false;
+      bulkBtn.classList.remove('loading');
+      setBulkButtonIdle();
+    }
+
+    showToast(`Bulk import klaar: ${bulkStats.imported} geimporteerd`, 'success');
+  }
+
 } // end guard
