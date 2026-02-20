@@ -883,27 +883,77 @@ if (window.__ncImporterLoaded) {
 
   async function handleBulkImport() {
     if (bulkRunning) return;
+    bulkRunning = true;
+
+    if (bulkBtn) {
+      bulkBtn.disabled = true;
+      bulkBtn.classList.add('loading');
+      bulkBtn.innerHTML = `<span class="nc-spinner"></span><span>Pagina laden...</span>`;
+    }
+
+    // Scroll de pagina om alle creaties te laden (infinite scroll)
+    await scrollToLoadAll();
 
     const creations = extractCreationLinks();
     if (creations.length === 0) {
       showToast('Geen creaties gevonden op deze pagina', 'error');
+      bulkRunning = false;
+      if (bulkBtn) {
+        bulkBtn.disabled = false;
+        bulkBtn.classList.remove('loading');
+        setBulkButtonIdle();
+      }
       return;
     }
 
-    bulkRunning = true;
     if (bulkBtn) {
-      bulkBtn.disabled = true;
-      bulkBtn.classList.add('loading');
-      bulkBtn.innerHTML = `<span class="nc-spinner"></span><span>Bezig...</span>`;
+      bulkBtn.innerHTML = `<span class="nc-spinner"></span><span>${creations.length} gevonden, importeren...</span>`;
     }
 
     showProgressOverlay(creations.length);
 
-    // Stuur creatie-links naar background voor verwerking
     chrome.runtime.sendMessage({
       action: 'startBulkImport',
       creations: creations
     });
+  }
+
+  // ─── Auto-scroll om infinite scroll content te laden ──────────────────────────
+
+  async function scrollToLoadAll() {
+    let prevCount = 0;
+    let sameCountTimes = 0;
+    const maxScrolls = 100;
+    let scrollCount = 0;
+
+    while (sameCountTimes < 3 && scrollCount < maxScrolls) {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      await new Promise(r => setTimeout(r, 1500));
+
+      // Tel unieke creatie-links
+      const links = document.querySelectorAll('a[href*="/creation/"]');
+      const uniqueIds = new Set();
+      links.forEach(a => {
+        const m = a.href.match(/\/creation\/([a-zA-Z0-9_-]+)/);
+        if (m) uniqueIds.add(m[1]);
+      });
+
+      const currentCount = uniqueIds.size;
+      if (currentCount === prevCount) {
+        sameCountTimes++;
+      } else {
+        sameCountTimes = 0;
+        prevCount = currentCount;
+        if (bulkBtn) {
+          bulkBtn.innerHTML = `<span class="nc-spinner"></span><span>Laden... ${currentCount} gevonden</span>`;
+        }
+      }
+      scrollCount++;
+    }
+
+    // Scroll terug naar boven
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    await new Promise(r => setTimeout(r, 500));
   }
 
   // ─── Voortgangsoverlay ────────────────────────────────────────────────────────
