@@ -375,8 +375,37 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Loading spinner */
-.spinner {
+/* Already imported badge */
+.already-imported {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #052e16;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  animation: slideIn 0.25s ease;
+}
+
+.already-imported svg {
+  width: 16px;
+  height: 16px;
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+.ai-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.ai-date {
+  font-size: 10px;
+  color: #86efac;
+  margin-top: 1px;
+}
   display: inline-block;
   width: 12px;
   height: 12px;
