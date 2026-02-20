@@ -151,7 +151,31 @@ function App() {
   const allGalleryImages = (item) => {
     if (!item) return [];
     const imgs = item.allImages?.length > 0 ? item.allImages : (item.imageUrl ? [item.imageUrl] : []);
-    return [...new Set(imgs)]; // deduplicate
+    return [...new Set(imgs)];
+  };
+
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (exportRef.current && !exportRef.current.contains(e.target)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleExport = (format) => {
+    const data = filtered.length > 0 ? filtered : imports;
+    if (data.length === 0) { showToast('Geen data om te exporteren', 'error'); return; }
+    if (format === 'json') {
+      exportAsJSON(data);
+      showToast(`${data.length} imports geëxporteerd als JSON`);
+    } else {
+      exportAsCSV(data);
+      showToast(`${data.length} imports geëxporteerd als CSV`);
+    }
+    setExportOpen(false);
   };
 
   return (
