@@ -341,7 +341,7 @@ function App() {
                     </div>
                   )}
                   <div className="card-badges">
-                    {item.metadata?.is_published && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
+                    {item.metadata?.is_published && <span className="badge-published">Gepubliceerd</span>}
                     {item.media_type === 'video' && <span className="badge-video">VIDEO</span>}
                     {(item.metadata?.all_images?.length || 0) > 1 && (
                       <span className="badge-count">{item.metadata.all_images.length}</span>
