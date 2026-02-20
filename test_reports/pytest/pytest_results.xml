@@ -1,1 +1,113 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="10" time="1.456" timestamp="2026-02-20T16:21:04.524693+00:00" hostname="agent-env-60d57dc4-2277-4e97-8515-0f70e3b05455"><testcase classname="backend.tests.test_imports.TestHealth" name="test_import_health" time="0.229" /><testcase classname="backend.tests.test_imports.TestImports" name="test_post_import" time="0.230" /><testcase classname="backend.tests.test_imports.TestImports" name="test_duplicate_detection" time="0.117" /><testcase classname="backend.tests.test_imports.TestImports" name="test_get_imports" time="0.178" /><testcase classname="backend.tests.test_imports.TestImports" name="test_get_stats" time="0.203" /><testcase classname="backend.tests.test_imports.TestImports" name="test_delete_import" time="0.229" /><testcase classname="backend.tests.test_imports.TestImports" name="test_delete_nonexistent" time="0.187" /><testcase classname="backend.tests.test_imports.TestExtensionFiles" name="test_manifest_valid_json" time="0.000" /><testcase classname="backend.tests.test_imports.TestExtensionFiles" name="test_extension_files_exist" time="0.000" /><testcase classname="backend.tests.test_imports.TestExtensionFiles" name="test_extension_icons_exist" time="0.000" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="7" skipped="0" tests="10" time="0.228" timestamp="2026-02-20T16:39:18.946902+00:00" hostname="agent-env-60d57dc4-2277-4e97-8515-0f70e3b05455"><testcase classname="backend.tests.test_imports.TestHealth" name="test_import_health" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/import/health': No scheme supplied. Perhaps you meant https:///api/import/health?">backend/tests/test_imports.py:12: in test_import_health
+    r = requests.get(f"{BASE_URL}/api/import/health")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/import/health': No scheme supplied. Perhaps you meant https:///api/import/health?</failure></testcase><testcase classname="backend.tests.test_imports.TestImports" name="test_post_import" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/import': No scheme supplied. Perhaps you meant https:///api/import?">backend/tests/test_imports.py:30: in test_post_import
+    r = requests.post(f"{BASE_URL}/api/import", json=payload)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/import': No scheme supplied. Perhaps you meant https:///api/import?</failure></testcase><testcase classname="backend.tests.test_imports.TestImports" name="test_duplicate_detection" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/import': No scheme supplied. Perhaps you meant https:///api/import?">backend/tests/test_imports.py:44: in test_duplicate_detection
+    r = requests.post(f"{BASE_URL}/api/import", json=payload)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:115: in post
+    return request("post", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/import': No scheme supplied. Perhaps you meant https:///api/import?</failure></testcase><testcase classname="backend.tests.test_imports.TestImports" name="test_get_imports" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/imports': No scheme supplied. Perhaps you meant https:///api/imports?">backend/tests/test_imports.py:50: in test_get_imports
+    r = requests.get(f"{BASE_URL}/api/imports")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/imports': No scheme supplied. Perhaps you meant https:///api/imports?</failure></testcase><testcase classname="backend.tests.test_imports.TestImports" name="test_get_stats" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/imports/stats/summary': No scheme supplied. Perhaps you meant https:///api/imports/stats/summary?">backend/tests/test_imports.py:57: in test_get_stats
+    r = requests.get(f"{BASE_URL}/api/imports/stats/summary")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:73: in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/imports/stats/summary': No scheme supplied. Perhaps you meant https:///api/imports/stats/summary?</failure></testcase><testcase classname="backend.tests.test_imports.TestImports" name="test_delete_import" time="0.000"><failure message="AssertionError: No created_id from previous test&#10;assert None is not None&#10; +  where None = TestImports.created_id">backend/tests/test_imports.py:66: in test_delete_import
+    assert TestImports.created_id is not None, "No created_id from previous test"
+E   AssertionError: No created_id from previous test
+E   assert None is not None
+E    +  where None = TestImports.created_id</failure></testcase><testcase classname="backend.tests.test_imports.TestImports" name="test_delete_nonexistent" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/imports/nonexistent-id-xyz': No scheme supplied. Perhaps you meant https:///api/imports/nonexistent-id-xyz?">backend/tests/test_imports.py:73: in test_delete_nonexistent
+    r = requests.delete(f"{BASE_URL}/api/imports/nonexistent-id-xyz")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:157: in delete
+    return request("delete", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/api.py:59: in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/imports/nonexistent-id-xyz': No scheme supplied. Perhaps you meant https:///api/imports/nonexistent-id-xyz?</failure></testcase><testcase classname="backend.tests.test_imports.TestExtensionFiles" name="test_manifest_valid_json" time="0.000" /><testcase classname="backend.tests.test_imports.TestExtensionFiles" name="test_extension_files_exist" time="0.000" /><testcase classname="backend.tests.test_imports.TestExtensionFiles" name="test_extension_icons_exist" time="0.000" /></testsuite></testsuites>
