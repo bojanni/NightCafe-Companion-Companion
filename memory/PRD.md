@@ -109,5 +109,5 @@ Endpoints:
 
 ### Lokale app (endpoint)
 - Backend draait op poort 8001 (via supervisor)
-- Frontend dashboard: `https://studio-data-bridge.preview.emergentagent.com`
+- Frontend dashboard: `https://creation-gallery-1.preview.emergentagent.com`
 - Extensie endpoint instelling: `http://localhost:3000` (of jouw app URL)
