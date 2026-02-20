@@ -83,6 +83,7 @@ Endpoints:
 - [x] Main image via mdi #e64d6a
 - [x] Backend ontvanger met alle velden
 - [x] Dashboard frontend
+- [x] Export naar JSON en CSV (met gefilterde selectie)
 
 ### P1 (next steps)
 - [ ] Meerdere creaties tegelijk importeren (list-pagina support)
