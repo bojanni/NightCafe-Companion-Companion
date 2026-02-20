@@ -79,6 +79,19 @@
     <div class="section">
       <div class="section-title">Importeer Huidige Pagina</div>
       <div class="section-sub" id="importHint">Navigeer naar een NightCafe creatie</div>
+
+      <!-- Al geïmporteerd badge -->
+      <div id="alreadyImportedBadge" class="already-imported hidden" data-testid="already-imported-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <div class="ai-label">Al geïmporteerd</div>
+          <div class="ai-date" id="alreadyImportedDate"></div>
+        </div>
+      </div>
+
       <button id="importBtn" class="btn btn-primary" data-testid="import-btn">
         <span class="btn-icon-left">&#8593;</span>
         Importeer Nu

@@ -97,6 +97,23 @@ async def import_health():
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
+@api_router.get("/import/status")
+async def check_import_status(creationId: str):
+    """Check if a creation has already been imported (used by the browser extension)."""
+    item = await db.imports.find_one(
+        {"creationId": creationId},
+        {"_id": 0, "id": 1, "title": 1, "importedAt": 1, "creationType": 1}
+    )
+    if item:
+        return {
+            "exists": True,
+            "id": item.get("id"),
+            "title": item.get("title"),
+            "importedAt": item.get("importedAt"),
+            "creationType": item.get("creationType")
+        }
+    return {"exists": False}
+
 @api_router.get("/imports/stats/summary")
 async def get_stats():
     total = await db.imports.count_documents({})
