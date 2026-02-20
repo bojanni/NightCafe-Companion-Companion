@@ -300,6 +300,23 @@ function App() {
             )}
           </div>
 
+          {/* Download button */}
+          <button
+            className="btn-download-all"
+            onClick={handleDownloadAll}
+            disabled={downloading === 'all' || dlStats.pending === 0}
+            title={dlStats.pending > 0 ? `${dlStats.pending} afbeeldingen nog niet lokaal opgeslagen` : 'Alle afbeeldingen al opgeslagen'}
+            data-testid="download-all-btn"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            {downloading === 'all' ? 'Downloaden...' : `Opslaan`}
+            {dlStats.pending > 0 && <span className="dl-count">{dlStats.pending}</span>}
+          </button>
+
           <button className="refresh-btn" onClick={fetchData} title="Vernieuwen" data-testid="refresh-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 4 23 10 17 10"/>
