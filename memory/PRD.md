@@ -17,97 +17,122 @@ Local App (localhost:3000)
   └── React Frontend (App.js)        ← gallery dashboard
 ```
 
+## Database Schema (matcht db-init.js)
+
+### prompts collectie
+| Veld | Type | Default |
+|------|------|---------|
+| id | UUID | auto |
+| user_id | UUID | null |
+| title | TEXT | null |
+| content | TEXT | null (prompt tekst) |
+| notes | TEXT | null |
+| rating | NUMERIC(3,1) | 0 |
+| is_favorite | BOOLEAN | false |
+| is_template | BOOLEAN | false |
+| created_at | TIMESTAMP | now() |
+| updated_at | TIMESTAMP | now() |
+| model | TEXT | null |
+| category | TEXT | null |
+| revised_prompt | TEXT | null |
+| seed | INTEGER | null |
+| aspect_ratio | TEXT | null |
+| use_custom_aspect_ratio | BOOLEAN | false |
+| gallery_item_id | UUID | null |
+| use_count | INTEGER | 0 |
+| last_used_at | TIMESTAMP | null |
+| suggested_model | TEXT | null |
+
+### gallery_items collectie
+| Veld | Type | Default |
+|------|------|---------|
+| id | UUID | auto |
+| user_id | UUID | null |
+| title | TEXT | null |
+| image_url | TEXT | null |
+| prompt_used | TEXT | null |
+| model_used | TEXT | null |
+| notes | TEXT | null |
+| is_favorite | BOOLEAN | false |
+| aspect_ratio | TEXT | null |
+| use_custom_aspect_ratio | BOOLEAN | false |
+| start_image | TEXT | null |
+| created_at | TIMESTAMP | now() |
+| updated_at | TIMESTAMP | now() |
+| prompt_id | UUID | null |
+| rating | NUMERIC(3,1) | 0 |
+| model | TEXT | null |
+| local_path | TEXT | null |
+| metadata | JSONB | {} |
+| width | INTEGER | null |
+| height | INTEGER | null |
+| character_id | UUID | null |
+| collection_id | UUID | null |
+| media_type | TEXT | 'image' |
+| video_url | TEXT | null |
+| video_local_path | TEXT | null |
+| thumbnail_url | TEXT | null |
+| duration_seconds | INTEGER | null |
+| storage_mode | TEXT | 'url' |
+
+### NightCafe data in metadata JSONB
+- source, source_url, nightcafe_creation_id
+- all_images, is_published, video_prompt, revised_prompt
+- initial_resolution, sampling_method, runtime, extracted_at, tags
+
 ## Geïmplementeerd (Feb 2026)
 
 ### Browser Extensie (`/app/extension/`)
-- **Manifest V3** – Chrome + Firefox 128+
-- **Content script** (`content.js`) – injectie op alle NightCafe pagina's
-  - Floating "Importeer" knop (rechtsonder, toggle aan/uit)
-  - Toast notificaties (success/error)
-  - Async data extractie
-- **Popup** (`popup.html/js/css`) – extensie menu
-  - Configureerbare endpoint URL (opgeslagen in storage)
-  - Test Verbinding knop → GET `/api/import/health`
-  - Toggle pagina-knop (aan/uit)
-  - Importeer knop (stuurt data naar endpoint)
-- **Service Worker** (`background.js`) – NC badge op toolbar
+- Manifest V3 – Chrome + Firefox 128+
+- Content script met floating knop + toast
+- Popup met test verbinding, toggle, importeer
+- Published status detectie via "Unpublish" knop
 
 ### Data Extractie (content.js)
-Geëxtraheerde velden:
-| Veld | Bron |
-|------|------|
-| `title` | `<h1>` element |
-| `prompt` | "Text Prompts" label in Creation Settings |
-| `revisedPrompt` | "Revised Prompt" label |
-| `model` | Link naar `/model/` pagina |
-| `initialResolution` | "Initial Resolution" label |
-| `aspectRatio` | "Aspect Ratio" label |
-| `seed` | "Seed" label |
-| `isPublished` | "Unpublish" knop aanwezig → gepubliceerd |
-| `imageUrl` | mdi-icon met color `#e64d6a` → nearest img |
-| `allImages` | `[data-thumb-gallery]` → click & capture |
-| `metadata` | samplingMethod, runtime, promptWeight, tags |
-
-Extractie volgorde:
-1. `<h1>` / meta-tags
-2. TreeWalker label→value in "Creation Settings" sectie
-3. DOM fallbacks
-4. JSON-LD structured data
+- Title, prompt, revised prompt, video prompt, start image
+- Model, initial resolution, aspect ratio, seed
+- Published state, gallery images, metadata (tags, sampling, runtime)
 
 ### Backend (`/app/backend/server.py`)
-Endpoints:
-- `GET /api/import/health` – verbindingstest
-- `POST /api/import` – ontvang creatie (met duplicate-detectie op creationId)
-- `GET /api/imports` – lijst alle imports (gesorteerd op datum)
-- `GET /api/imports/stats/summary` – statistieken (5 velden)
-- `GET /api/imports/{id}` – enkel import
-- `DELETE /api/imports/{id}` – verwijder import
+- POST /api/import – ontvang en sla op (duplicate detectie via metadata.nightcafe_creation_id)
+- GET /api/import/status – check import status
+- GET /api/import/health – verbindingstest
+- GET /api/gallery-items – lijst items
+- GET /api/gallery-items/{id} – detail met _prompt
+- GET /api/gallery-items/stats/summary – statistieken
+- DELETE /api/gallery-items/{id} – verwijder item + prompt
+- GET /api/prompts – lijst prompts
 
 ### React Frontend (`/app/frontend/src/`)
-- Gallery dashboard met statistieken (Totaal, Met afbeelding, Met prompt, Meerdere afb., Gepubliceerd)
-- Zoekfunctie (titel, prompt, model, aspectRatio)
-- Detail panel (slideIn van rechts):
-  - Thumbnail strip voor meerdere afbeeldingen
-  - "GEPUBLICEERD" badge
-  - Settings grid (Model, Resolution, Aspect Ratio, Seed, Sampling, Runtime)
-  - Tags weergave
-  - Verwijder met bevestiging
+- Gallery dashboard met statistieken
+- Zoekfunctie
+- Detail panel met alle velden
+- "Gepubliceerd" tekst-badge op kaarten
+- VIDEO badge, afbeeldingen-teller badge
+- Export JSON/CSV
+- Verwijder met bevestiging
 
-## Prioriteiten Backlog
-
-### P0 (gedaan)
-- [x] Extensie met popup (test, toggle, importeer)
+## Voltooid
+- [x] Extensie met popup
 - [x] Content script met floating knop
-- [x] Data extractie (h1, prompts, model, resolution, AR, seed, published)
-- [x] Gallery extractie via data-thumb-gallery
-- [x] Main image via mdi #e64d6a
-- [x] Backend ontvanger met alle velden
+- [x] Data extractie (alle velden)
+- [x] Backend import/gallery/prompts endpoints
 - [x] Dashboard frontend
-- [x] Auto-mapping: prompt → `prompts` collectie, imageUrl → `gallery_items.image_url`, `prompt_id` koppeling
-- [x] gallery_items schema matcht app-schema: title, image_url, prompt_used, prompt_id, character_id, rating, collection_id
+- [x] Auto-mapping naar prompts + gallery_items
+- [x] Schema afgestemd op db-init.js (Feb 2026)
+- [x] Published badge verduidelijkt (tekst i.p.v. puntje)
+- [x] JSON/CSV export
+- [x] Already imported status detectie
 
-### P1 (next steps)
+## Backlog
+
+### P1
 - [ ] Meerdere creaties tegelijk importeren (list-pagina support)
-- [ ] Exporteren naar JSON/CSV vanuit dashboard
 - [ ] Extensie packagen als .zip voor permanente Firefox installatie
-- [ ] Auto-sync optie (periodiek alle nieuwe creaties importeren)
+- [ ] Auto-sync optie
 
-### P2 (toekomst)
+### P2
 - [ ] Zoekopdrachten & filters (op model, datum, gepubliceerd)
 - [ ] Collections/mappen in dashboard
 - [ ] Afbeeldingen lokaal downloaden en opslaan
 - [ ] Webhook support voor externe apps
-
-## Installatie
-
-### Extensie (Chrome)
-1. `python /app/extension/generate_icons.py` (als icons nog niet bestaan)
-2. `chrome://extensions/` → Developer mode → Load unpacked → `/app/extension/`
-
-### Extensie (Firefox)
-1. `about:debugging` → Load Temporary Add-on → `/app/extension/manifest.json`
-
-### Lokale app (endpoint)
-- Backend draait op poort 8001 (via supervisor)
-- Frontend dashboard: `https://creation-gallery-1.preview.emergentagent.com`
-- Extensie endpoint instelling: `http://localhost:3000` (of jouw app URL)
