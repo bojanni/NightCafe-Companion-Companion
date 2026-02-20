@@ -823,6 +823,23 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
+
+/* ─── Prompt ID koppeling ─────────────────────────────────────────────────── */
+.prompt-id-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 11px;
+  color: var(--primary-light);
+}
+.prompt-id-row svg { width: 13px; height: 13px; flex-shrink: 0; }
+.prompt-id-row code { font-family: 'SF Mono', Consolas, monospace; font-size: 10px; opacity: 0.85; }
+
+
 .mono-small {
   font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
   font-size: 11px;
