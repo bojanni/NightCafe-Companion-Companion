@@ -365,6 +365,45 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ─── Card badges ─────────────────────────────────────────────────────────── */
+.card-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.badge-pub {
+  font-size: 8px;
+  color: #22c55e;
+  background: rgba(0,0,0,0.6);
+  padding: 2px 6px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.badge-count {
+  background: rgba(0,0,0,0.65);
+  color: var(--primary-light);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.badge-ratio {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 20px;
+}
+
 /* ─── Detail panel ────────────────────────────────────────────────────────── */
 .detail-overlay {
   position: fixed;
