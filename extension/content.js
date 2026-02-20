@@ -28,10 +28,15 @@ if (window.__ncImporterLoaded) {
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === 'toggleButton') {
       if (msg.enabled) {
-        injectButton();
-        scheduleStatusCheck();
+        if (isListPage()) {
+          injectBulkButton();
+        } else {
+          injectButton();
+          scheduleStatusCheck();
+        }
       } else {
         removeButton();
+        removeBulkButton();
       }
       sendResponse({ ok: true });
       return true;
@@ -43,8 +48,22 @@ if (window.__ncImporterLoaded) {
       return true;
     }
     if (msg.action === 'markImported') {
-      // Popup meldt dat import succesvol was → update floating button
       setButtonImported(msg.importedAt);
+      sendResponse({ ok: true });
+      return true;
+    }
+    if (msg.action === 'getCreationLinks') {
+      const links = extractCreationLinks();
+      sendResponse({ links });
+      return true;
+    }
+    if (msg.action === 'bulkProgress') {
+      updateProgressOverlay(msg);
+      sendResponse({ ok: true });
+      return true;
+    }
+    if (msg.action === 'bulkComplete') {
+      completeBulkImport(msg);
       sendResponse({ ok: true });
       return true;
     }
