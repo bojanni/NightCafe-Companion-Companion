@@ -537,11 +537,11 @@ function App() {
               </div>
 
               {/* Tags */}
-              {selected._prompt?.metadata?.tags?.length > 0 && (
+              {selected.metadata?.tags?.length > 0 && (
                 <div className="detail-field" data-testid="detail-tags">
                   <label>Tags</label>
                   <div className="tags-row">
-                    {selected._prompt.metadata.tags.map(tag => (
+                    {selected.metadata.tags.map(tag => (
                       <span key={tag} className="tag-pill">{tag}</span>
                     ))}
                   </div>
@@ -567,24 +567,24 @@ function App() {
               {/* Source */}
               <div className="detail-field" data-testid="detail-url">
                 <label>NightCafe URL</label>
-                <a href={selected.source_url} target="_blank" rel="noopener noreferrer" className="detail-link">
-                  {selected.source_url}
+                <a href={selected.metadata?.source_url} target="_blank" rel="noopener noreferrer" className="detail-link">
+                  {selected.metadata?.source_url}
                 </a>
               </div>
-              {selected.nightcafe_creation_id && (
+              {selected.metadata?.nightcafe_creation_id && (
                 <div className="detail-field" data-testid="detail-creation-id">
                   <label>Creation ID</label>
-                  <span className="mono-small">{selected.nightcafe_creation_id}</span>
+                  <span className="mono-small">{selected.metadata.nightcafe_creation_id}</span>
                 </div>
               )}
               <div className="detail-field" data-testid="detail-imported-at">
                 <label>Geïmporteerd op</label>
-                <p>{formatDate(selected.imported_at)}</p>
+                <p>{formatDate(selected.created_at)}</p>
               </div>
-              {(selected.all_images?.length || 0) > 1 && (
+              {(selected.metadata?.all_images?.length || 0) > 1 && (
                 <div className="detail-field" data-testid="detail-images-count">
                   <label>Afbeeldingen</label>
-                  <p>{selected.all_images.length} varianten</p>
+                  <p>{selected.metadata.all_images.length} varianten</p>
                 </div>
               )}
 
