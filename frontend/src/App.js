@@ -76,7 +76,9 @@ function App() {
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [toast, setToast] = useState(null);
-  const [activeImage, setActiveImage] = useState(null); // for gallery carousel
+  const [activeImage, setActiveImage] = useState(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef(null);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
