@@ -203,12 +203,57 @@ function App() {
             <p className="brand-sub">Data Bridge &amp; Import Dashboard</p>
           </div>
         </div>
-        <button className="refresh-btn" onClick={fetchData} title="Vernieuwen" data-testid="refresh-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="23 4 23 10 17 10"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-          </svg>
-        </button>
+        <div className="header-actions">
+          {/* Export dropdown */}
+          <div className="export-dropdown" ref={exportRef}>
+            <button
+              className="btn-export"
+              onClick={() => setExportOpen(o => !o)}
+              disabled={imports.length === 0}
+              data-testid="export-dropdown-btn"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Exporteer
+              {search && filtered.length < imports.length && (
+                <span className="export-count">{filtered.length}</span>
+              )}
+              <svg className="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            {exportOpen && (
+              <div className="export-menu" data-testid="export-menu">
+                <button
+                  className="export-option"
+                  onClick={() => handleExport('json')}
+                  data-testid="export-json-btn"
+                >
+                  <span className="export-format">JSON</span>
+                  <span className="export-desc">Volledig formaat</span>
+                </button>
+                <button
+                  className="export-option"
+                  onClick={() => handleExport('csv')}
+                  data-testid="export-csv-btn"
+                >
+                  <span className="export-format">CSV</span>
+                  <span className="export-desc">Excel-compatibel</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button className="refresh-btn" onClick={fetchData} title="Vernieuwen" data-testid="refresh-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
       </header>
 
       {/* Stats bar */}
