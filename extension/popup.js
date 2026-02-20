@@ -55,6 +55,7 @@ async function checkCurrentTab() {
       );
 
       if (isListPage) {
+        importSectionTitle.textContent = 'Bulk Import';
         importHint.textContent = 'Lijst-pagina gedetecteerd';
         importBtn.disabled = false;
         importBtn.innerHTML = '<span class="btn-icon-left">&#8595;&#8595;</span> Importeer Alles';
