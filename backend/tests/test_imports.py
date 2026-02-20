@@ -1,0 +1,101 @@
+"""Tests for NightCafe Studio Data Bridge API"""
+import pytest
+import requests
+import os
+import json
+
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+
+# Health check
+class TestHealth:
+    def test_import_health(self):
+        r = requests.get(f"{BASE_URL}/api/import/health")
+        assert r.status_code == 200
+        data = r.json()
+        assert data.get('status') == 'ok'
+
+# Import CRUD
+class TestImports:
+    created_id = None
+
+    def test_post_import(self):
+        payload = {
+            "url": "https://creator.nightcafe.studio/creation/TEST_abc123",
+            "creationId": "TEST_abc123",
+            "title": "TEST_Creation",
+            "prompt": "a beautiful sunset over the ocean",
+            "imageUrl": "https://example.com/image.jpg",
+            "model": "Stable Diffusion XL"
+        }
+        r = requests.post(f"{BASE_URL}/api/import", json=payload)
+        assert r.status_code == 201
+        data = r.json()
+        assert data.get('success') is True
+        assert 'id' in data
+        assert data.get('duplicate') is False
+        TestImports.created_id = data['id']
+
+    def test_duplicate_detection(self):
+        payload = {
+            "url": "https://creator.nightcafe.studio/creation/TEST_abc123",
+            "creationId": "TEST_abc123",
+            "title": "TEST_Duplicate"
+        }
+        r = requests.post(f"{BASE_URL}/api/import", json=payload)
+        assert r.status_code == 201
+        data = r.json()
+        assert data.get('duplicate') is True
+
+    def test_get_imports(self):
+        r = requests.get(f"{BASE_URL}/api/imports")
+        assert r.status_code == 200
+        data = r.json()
+        assert isinstance(data, list)
+        assert len(data) >= 1
+
+    def test_get_stats(self):
+        r = requests.get(f"{BASE_URL}/api/imports/stats/summary")
+        assert r.status_code == 200
+        data = r.json()
+        assert 'total' in data
+        assert 'withImage' in data
+        assert 'withPrompt' in data
+        assert data['total'] >= 1
+
+    def test_delete_import(self):
+        assert TestImports.created_id is not None, "No created_id from previous test"
+        r = requests.delete(f"{BASE_URL}/api/imports/{TestImports.created_id}")
+        assert r.status_code == 200
+        data = r.json()
+        assert data.get('success') is True
+
+    def test_delete_nonexistent(self):
+        r = requests.delete(f"{BASE_URL}/api/imports/nonexistent-id-xyz")
+        assert r.status_code == 404
+
+# Extension files
+class TestExtensionFiles:
+    def test_manifest_valid_json(self):
+        with open('/app/extension/manifest.json') as f:
+            data = json.load(f)
+        assert data['manifest_version'] == 3
+        assert 'name' in data
+        assert 'version' in data
+        assert 'permissions' in data
+        assert 'action' in data
+        assert 'content_scripts' in data
+        assert 'background' in data
+
+    def test_extension_files_exist(self):
+        import pathlib
+        base = pathlib.Path('/app/extension')
+        required = ['manifest.json', 'popup.html', 'popup.js', 'popup.css', 'content.js', 'content.css', 'background.js']
+        for f in required:
+            assert (base / f).exists(), f"Missing: {f}"
+
+    def test_extension_icons_exist(self):
+        import pathlib
+        icons_dir = pathlib.Path('/app/extension/icons')
+        for size in [16, 32, 48, 128]:
+            icon = icons_dir / f"icon{size}.png"
+            assert icon.exists(), f"Missing icon: icon{size}.png"
