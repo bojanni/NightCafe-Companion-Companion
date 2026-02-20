@@ -369,7 +369,7 @@ function App() {
             <div className="detail-header">
               <div className="detail-title-row">
                 <h2 data-testid="detail-title">{selected.title || 'Naamloze creatie'}</h2>
-                {selected.isPublished && (
+                {selected.is_published && (
                   <span className="pub-badge" data-testid="detail-published-badge">Gepubliceerd</span>
                 )}
               </div>
