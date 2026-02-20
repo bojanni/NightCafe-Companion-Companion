@@ -108,10 +108,19 @@ function App() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // When a creation is selected, reset active image
+  // When a creation is selected, fetch full detail (incl. _prompt) and reset active image
   useEffect(() => {
-    if (selected) setActiveImage(selected.image_url || null);
-  }, [selected]);
+    if (!selected) return;
+    setActiveImage(selected.image_url || null);
+    // Fetch full detail with linked prompt data
+    fetch(`${API}/api/gallery-items/${selected.id}`)
+      .then(r => r.json())
+      .then(full => {
+        setSelected(prev => prev?.id === full.id ? full : prev);
+        setActiveImage(full.image_url || null);
+      })
+      .catch(() => {});
+  }, [selected?.id]); // eslint-disable-line
 
   const handleDelete = async (id) => {
     try {
