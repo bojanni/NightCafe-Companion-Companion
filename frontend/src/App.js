@@ -581,7 +581,7 @@ function App() {
             </div>
 
             <div className="detail-actions">
-              <a href={selected.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" data-testid="detail-open-btn">
+              <a href={selected.source_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" data-testid="detail-open-btn">
                 Openen op NightCafe &#8599;
               </a>
               {deleteConfirm === selected.id ? (
