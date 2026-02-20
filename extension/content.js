@@ -355,7 +355,7 @@ if (window.__ncImporterLoaded) {
     const mainImg = getLargestNightCafeImageElement();
     if (!mainImg) return results;
 
-    const thumbs = [...gallery.querySelectorAll('img, [role="button"], [class*="thumb"]')].slice(0, 20);
+    const thumbs = [...gallery.querySelectorAll('img, [role="button"], [class*="thumb"]')].slice(0, 10);
     if (thumbs.length <= 1) return results;
 
     for (const thumb of thumbs) {
@@ -367,9 +367,9 @@ if (window.__ncImporterLoaded) {
         let ms = 0;
         const poll = setInterval(() => {
           ms += 80;
-          if (mainImg.src !== prevSrc || ms >= 1500) {
+          if (mainImg.src !== prevSrc || ms >= 800) {
             clearInterval(poll);
-            setTimeout(resolve, 150); // extra render buffer
+            setTimeout(resolve, 100); // extra render buffer
           }
         }, 80);
       });
