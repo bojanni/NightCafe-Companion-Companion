@@ -213,6 +213,13 @@ pageButtonToggle.addEventListener('change', async () => {
 
 // ─── Import button ────────────────────────────────────────────────────────────
 importBtn.addEventListener('click', async () => {
+  const mode = importBtn.dataset.mode || 'single';
+
+  if (mode === 'bulk') {
+    await handleBulkFromPopup();
+    return;
+  }
+
   importBtn.disabled = true;
   importBtn.innerHTML = '<span class="spinner"></span> Afbeeldingen ophalen...';
   hideMessage();
@@ -245,9 +252,7 @@ importBtn.addEventListener('click', async () => {
         : `Geïmporteerd! (${result.id?.slice(0, 8)}...)`;
       showMessage(msg, 'success');
 
-      // Update badge to "al geïmporteerd"
       updateImportStatusBadge({ exists: true, importedAt: new Date().toISOString() });
-      // Notify content script to update floating button
       try {
         await chrome.tabs.sendMessage(tab.id, { action: 'markImported', importedAt: new Date().toISOString() });
       } catch { /* ignore */ }
@@ -262,6 +267,43 @@ importBtn.addEventListener('click', async () => {
     importBtn.innerHTML = '<span class="btn-icon-left">&#8635;</span> Opnieuw importeren';
   }
 });
+
+// ─── Bulk import from popup ───────────────────────────────────────────────────
+async function handleBulkFromPopup() {
+  importBtn.disabled = true;
+  importBtn.innerHTML = '<span class="spinner"></span> Bulk import starten...';
+  hideMessage();
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) throw new Error('Geen actief tabblad');
+
+    let response;
+    try {
+      response = await chrome.tabs.sendMessage(tab.id, { action: 'getCreationLinks' });
+    } catch {
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+      await new Promise(r => setTimeout(r, 500));
+      response = await chrome.tabs.sendMessage(tab.id, { action: 'getCreationLinks' });
+    }
+
+    if (!response?.links?.length) {
+      throw new Error('Geen creaties gevonden op deze pagina');
+    }
+
+    chrome.runtime.sendMessage({
+      action: 'startBulkImport',
+      creations: response.links
+    });
+
+    showMessage(`Bulk import gestart: ${response.links.length} creaties. Voortgang op de pagina.`, 'success');
+  } catch (err) {
+    showMessage(err.message || 'Bulk import mislukt', 'error');
+  } finally {
+    importBtn.disabled = false;
+    importBtn.innerHTML = '<span class="btn-icon-left">&#8595;&#8595;</span> Importeer Alles';
+  }
+}
 
 // ─── Message helpers ──────────────────────────────────────────────────────────
 function showMessage(text, type = 'info') {
