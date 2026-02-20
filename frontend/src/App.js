@@ -73,6 +73,8 @@ function App() {
   const [toast, setToast] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
   const [exportOpen, setExportOpen] = useState(false);
+  const [downloading, setDownloading] = useState(null); // item_id of 'all'
+  const [dlStats, setDlStats] = useState({ total: 0, local: 0, pending: 0 });
   const exportRef = useRef(null);
 
   const showToast = (msg, type = 'success') => {
@@ -82,14 +84,17 @@ function App() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [importsRes, statsRes] = await Promise.all([
+      const [importsRes, statsRes, dlStatsRes] = await Promise.all([
         fetch(`${API}/api/gallery-items`),
-        fetch(`${API}/api/gallery-items/stats/summary`)
+        fetch(`${API}/api/gallery-items/stats/summary`),
+        fetch(`${API}/api/gallery-items/download/stats`)
       ]);
       const importsData = await importsRes.json();
       const statsData = await statsRes.json();
+      const dlStatsData = await dlStatsRes.json();
       setImports(Array.isArray(importsData) ? importsData : []);
       setStats(statsData);
+      setDlStats(dlStatsData);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
