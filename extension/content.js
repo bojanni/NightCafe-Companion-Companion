@@ -214,8 +214,7 @@ if (window.__ncImporterLoaded) {
     return document.body;
   }
 
-  // ─── Generic label → value extractor ─────────────────────────────────────────
-  //
+  // ─── Generic label → value extractor ─────────────────────────────────────────  //
   // NightCafe structure (from live page):
   //   <heading>Text Prompts</heading>
   //   <div>the actual prompt text</div>
