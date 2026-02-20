@@ -334,6 +334,7 @@ function App() {
           { key: 'withPrompt', label: 'Met prompt', value: stats.withPrompt },
           { key: 'withMultipleImages', label: 'Meerdere afb.', value: stats.withMultipleImages },
           { key: 'published', label: 'Gepubliceerd', value: stats.published },
+          { key: 'local', label: 'Lokaal opgeslagen', value: dlStats.local },
         ].map(s => (
           <div className="stat-card" key={s.key} data-testid={`stat-${s.key}`}>
             <span className="stat-num">{s.value ?? 0}</span>
