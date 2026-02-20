@@ -48,14 +48,35 @@ async function checkCurrentTab() {
       const isCreationPage = !!creationMatch;
       currentCreationId = creationMatch ? creationMatch[1] : null;
 
-      importHint.textContent = isCreationPage
-        ? 'Klaar om te importeren!'
-        : 'Open een creatie-pagina om te importeren';
-      importBtn.disabled = !isCreationPage;
+      // Check of het een lijst-pagina is
+      const isListPage = !isCreationPage && (
+        /^\/(u\/|my-creations|explore|feed)/i.test(new URL(tab.url).pathname)
+      );
 
-      // Check import status for this creation
-      if (isCreationPage && currentCreationId) {
-        checkCreationStatus(currentCreationId);
+      if (isListPage) {
+        importHint.textContent = 'Lijst-pagina gedetecteerd';
+        importBtn.disabled = false;
+        importBtn.innerHTML = '<span class="btn-icon-left">&#8595;&#8595;</span> Importeer Alles';
+        importBtn.dataset.mode = 'bulk';
+
+        // Vraag aantal creaties op
+        try {
+          const response = await chrome.tabs.sendMessage(tab.id, { action: 'getCreationLinks' });
+          if (response?.links?.length > 0) {
+            importHint.textContent = `${response.links.length} creaties gevonden`;
+          }
+        } catch {}
+      } else if (isCreationPage) {
+        importHint.textContent = 'Klaar om te importeren!';
+        importBtn.disabled = false;
+        importBtn.dataset.mode = 'single';
+
+        if (currentCreationId) {
+          checkCreationStatus(currentCreationId);
+        }
+      } else {
+        importHint.textContent = 'Open een creatie-pagina om te importeren';
+        importBtn.disabled = true;
       }
     } else {
       isOnNightCafe = false;
