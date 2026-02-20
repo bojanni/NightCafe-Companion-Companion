@@ -337,6 +337,7 @@ function App() {
                   )}
                   <div className="card-badges">
                     {item.isPublished && <span className="badge-pub" title="Gepubliceerd">&#9679;</span>}
+                    {item.creationType === 'video' && <span className="badge-video">VIDEO</span>}
                     {(item.allImages?.length || 0) > 1 && (
                       <span className="badge-count">{item.allImages.length}</span>
                     )}
