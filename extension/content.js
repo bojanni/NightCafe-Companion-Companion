@@ -214,6 +214,65 @@ if (window.__ncImporterLoaded) {
     return document.body;
   }
 
+  // ─── Helper: find the text node for a label (for existence check) ─────────────
+  function findLabelTextNode(labelText, container) {
+    const ctx = container || document.body;
+    const walker = document.createTreeWalker(ctx, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.textContent.trim() === labelText) return node;
+    }
+    return null;
+  }
+
+  // ─── Click "Show full prompt" to expand truncated text ───────────────────────
+  async function clickShowFullPrompt(container) {
+    const ctx = container || document.body;
+    const allEls = ctx.querySelectorAll('button, a, span, [role="button"]');
+    for (const el of allEls) {
+      const t = el.textContent.trim().toLowerCase();
+      if (t === 'show full prompt' || t === 'show full' || t === 'toon volledige prompt') {
+        el.click();
+        await new Promise(r => setTimeout(r, 700));
+        return;
+      }
+    }
+  }
+
+  // ─── Extract image src after a label ─────────────────────────────────────────
+  // Finds the <img> element that appears directly after a given label text.
+  function extractImageAfterLabel(labelText, container) {
+    const ctx = container || document.body;
+    const walker = document.createTreeWalker(ctx, NodeFilter.SHOW_TEXT);
+    let node;
+
+    while ((node = walker.nextNode())) {
+      if (node.textContent.trim() !== labelText) continue;
+      const labelEl = node.parentElement;
+      if (labelEl.textContent.trim().length > labelText.length + 4) continue;
+
+      const candidates = [
+        labelEl.nextElementSibling,
+        labelEl.parentElement?.nextElementSibling,
+        labelEl.parentElement?.parentElement?.nextElementSibling,
+        labelEl.parentElement?.parentElement?.parentElement?.nextElementSibling
+      ];
+
+      for (const cand of candidates) {
+        if (!cand) continue;
+        // Direct <img>
+        if (cand.tagName === 'IMG' && cand.src) return toFullSizeUrl(cand.src);
+        // Nested <img>
+        const img = cand.querySelector('img');
+        if (img && img.src && img.src.startsWith('http')) return toFullSizeUrl(img.src);
+        // CSS background-image
+        const bgUrl = getBgImageUrl(cand);
+        if (bgUrl) return toFullSizeUrl(bgUrl);
+      }
+    }
+    return null;
+  }
+
   // ─── Generic label → value extractor ─────────────────────────────────────────  //
   // NightCafe structure (from live page):
   //   <heading>Text Prompts</heading>
