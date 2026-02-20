@@ -79,6 +79,116 @@ body {
   letter-spacing: 0.5px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Export dropdown ─────────────────────────────────────────────────────── */
+.export-dropdown {
+  position: relative;
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+  white-space: nowrap;
+}
+
+.btn-export:hover {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-export:disabled {
+  background: #2d2d4e;
+  color: #4b5563;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-export svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.btn-export .chevron {
+  width: 13px;
+  height: 13px;
+  transition: transform 0.2s;
+}
+
+.export-count {
+  background: rgba(255,255,255,0.25);
+  border-radius: 20px;
+  font-size: 10px;
+  padding: 1px 6px;
+  font-weight: 700;
+}
+
+.export-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #1e1e38;
+  border: 1px solid #3d3d5e;
+  border-radius: 10px;
+  padding: 4px;
+  min-width: 180px;
+  z-index: 300;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: menuIn 0.15s ease;
+}
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.export-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 12px;
+}
+
+.export-option:hover {
+  background: rgba(124, 58, 237, 0.15);
+}
+
+.export-format {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.export-desc {
+  font-size: 11px;
+  color: #64748b;
+}
+
 .refresh-btn {
   background: var(--bg3);
   border: 1px solid var(--border);
