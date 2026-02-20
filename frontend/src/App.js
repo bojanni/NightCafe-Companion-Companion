@@ -140,9 +140,9 @@ function App() {
     return (
       (item.title || '').toLowerCase().includes(q) ||
       (item.prompt_used || '').toLowerCase().includes(q) ||
-      (item.revised_prompt || '').toLowerCase().includes(q) ||
-      (item.video_prompt || '').toLowerCase().includes(q) ||
-      (item.nightcafe_creation_id || '').toLowerCase().includes(q) ||
+      (item._prompt?.revised_prompt || '').toLowerCase().includes(q) ||
+      (item.metadata?.video_prompt || '').toLowerCase().includes(q) ||
+      (item.metadata?.nightcafe_creation_id || '').toLowerCase().includes(q) ||
       (item.aspect_ratio || '').toLowerCase().includes(q)
     );
   });
@@ -159,7 +159,8 @@ function App() {
 
   const allGalleryImages = (item) => {
     if (!item) return [];
-    const imgs = item.all_images?.length > 0 ? item.all_images : (item.image_url ? [item.image_url] : []);
+    const allImgs = item.metadata?.all_images;
+    const imgs = allImgs?.length > 0 ? allImgs : (item.image_url ? [item.image_url] : []);
     return [...new Set(imgs)];
   };
 
