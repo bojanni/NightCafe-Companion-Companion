@@ -1,140 +1,71 @@
 # PRD – NightCafe Studio Importer
 
 ## Probleem
-Een browser extensie die op NightCafe.studio draait en in de browser-context (ingelogd als gebruiker) data extraheert en doorstuurt naar een lokale endpoint (`localhost:3000/api/import`). Hiermee wordt het auth-probleem omzeild omdat de extensie toegang heeft tot de geauthenticeerde pagina.
+Een browser extensie die op NightCafe.studio draait en in de browser-context (ingelogd als gebruiker) data extraheert en doorstuurt naar een lokale endpoint (`localhost:3000/api/import`). Hiermee wordt het auth-probleem omzeild.
 
 ## Architectuur
-
 ```
 Browser (NightCafe.studio)
-  └── Extension (content.js)         ← injectie in NightCafe pagina
+  └── Extension (content.js)         ← injectie, bulk knop, auto-scroll
         ↕ chrome.runtime.onMessage
-  └── Extension Popup (popup.js)     ← test, toggle, importeer
+  └── Extension Popup (popup.js)     ← test, toggle, importeer, bulk
         ↕ fetch POST /api/import
   └── Background (background.js)     ← bulk import tab management
 Local App (localhost:3000)
-  └── FastAPI Backend (server.py)    ← ontvangt imports
-  └── MongoDB                         ← slaat op
-  └── React Frontend (App.js)        ← gallery dashboard
+  └── FastAPI Backend (server.py)    ← imports, downloads, gallery
+  └── MongoDB                         ← prompts + gallery_items collecties
+  └── React Frontend (App.js)        ← dashboard met download support
+  └── /backend/downloads/             ← lokaal opgeslagen afbeeldingen
 ```
 
 ## Database Schema (matcht db-init.js)
 
-### prompts collectie
-| Veld | Type | Default |
-|------|------|---------|
-| id | UUID | auto |
-| user_id | UUID | null |
-| title | TEXT | null |
-| content | TEXT | null (prompt tekst) |
-| notes | TEXT | null |
-| rating | NUMERIC(3,1) | 0 |
-| is_favorite | BOOLEAN | false |
-| is_template | BOOLEAN | false |
-| created_at | TIMESTAMP | now() |
-| updated_at | TIMESTAMP | now() |
-| model | TEXT | null |
-| category | TEXT | null |
-| revised_prompt | TEXT | null |
-| seed | INTEGER | null |
-| aspect_ratio | TEXT | null |
-| use_custom_aspect_ratio | BOOLEAN | false |
-| gallery_item_id | UUID | null |
-| use_count | INTEGER | 0 |
-| last_used_at | TIMESTAMP | null |
-| suggested_model | TEXT | null |
+### prompts: id, user_id, title, content, notes, rating, is_favorite, is_template, created_at, updated_at, model, category, revised_prompt, seed(int), aspect_ratio, use_custom_aspect_ratio, gallery_item_id, use_count, last_used_at, suggested_model
 
-### gallery_items collectie
-| Veld | Type | Default |
-|------|------|---------|
-| id | UUID | auto |
-| user_id | UUID | null |
-| title | TEXT | null |
-| image_url | TEXT | null |
-| prompt_used | TEXT | null |
-| model_used | TEXT | null |
-| notes | TEXT | null |
-| is_favorite | BOOLEAN | false |
-| aspect_ratio | TEXT | null |
-| use_custom_aspect_ratio | BOOLEAN | false |
-| start_image | TEXT | null |
-| created_at | TIMESTAMP | now() |
-| updated_at | TIMESTAMP | now() |
-| prompt_id | UUID | null |
-| rating | NUMERIC(3,1) | 0 |
-| model | TEXT | null |
-| local_path | TEXT | null |
-| metadata | JSONB | {} |
-| width | INTEGER | null |
-| height | INTEGER | null |
-| character_id | UUID | null |
-| collection_id | UUID | null |
-| media_type | TEXT | 'image' |
-| video_url | TEXT | null |
-| video_local_path | TEXT | null |
-| thumbnail_url | TEXT | null |
-| duration_seconds | INTEGER | null |
-| storage_mode | TEXT | 'url' |
+### gallery_items: id, user_id, title, image_url, prompt_used, model_used, notes, is_favorite, aspect_ratio, use_custom_aspect_ratio, start_image, created_at, updated_at, prompt_id, rating, model, local_path, metadata(JSONB), width, height, character_id, collection_id, media_type, video_url, video_local_path, thumbnail_url, duration_seconds, storage_mode
 
-### NightCafe data in metadata JSONB
-- source, source_url, nightcafe_creation_id
-- all_images, is_published, video_prompt, revised_prompt
-- initial_resolution, sampling_method, runtime, extracted_at, tags
+### NightCafe metadata JSONB: source, source_url, nightcafe_creation_id, all_images, is_published, video_prompt, revised_prompt, initial_resolution, sampling_method, runtime, extracted_at, tags, local_images
 
 ## Voltooid (Feb 2026)
-
-### Browser Extensie
-- [x] Manifest V3 – Chrome + Firefox 128+
+- [x] Browser extensie (MV3, Chrome + Firefox 128+)
 - [x] Content script met floating knop + toast
 - [x] Popup met test verbinding, toggle, importeer
-- [x] Published status detectie via "Unpublish" knop
+- [x] Data extractie (alle NightCafe velden)
+- [x] Published status detectie + "Gepubliceerd" tekst-badge
 - [x] "Al geïmporteerd" status check
-- [x] **Bulk Import (lijst-pagina support)**
-  - Automatische detectie van profiel/lijst-pagina's
-  - "Importeer Alles" knop met aantal creaties
-  - Background script opent elke creatie in achtergrond-tab
-  - Volledige data extractie per creatie
-  - Duplicate check (overslaat al geïmporteerde items)
-  - Real-time voortgangsoverlay met stats en logboek
-  - Popup bulk import modus
-
-### Data Extractie
-- [x] Title, prompt, revised prompt, video prompt, start image
-- [x] Model, initial resolution, aspect ratio, seed
-- [x] Published state, gallery images, metadata
-
-### Backend
-- [x] POST /api/import – ontvang en sla op (duplicate detectie)
-- [x] GET /api/import/status – check import status
-- [x] GET /api/import/health – verbindingstest
-- [x] GET /api/gallery-items – lijst items
-- [x] GET /api/gallery-items/{id} – detail met _prompt
-- [x] GET /api/gallery-items/stats/summary – statistieken
-- [x] DELETE /api/gallery-items/{id} – verwijder item + prompt
-- [x] GET /api/prompts – lijst prompts
-
-### Frontend Dashboard
-- [x] Gallery met statistieken
-- [x] Zoekfunctie
-- [x] Detail panel met alle velden
-- [x] "Gepubliceerd" tekst-badge
-- [x] Export JSON/CSV
-- [x] Verwijder met bevestiging
-
-### Schema Update
+- [x] Bulk Import (lijst-pagina) met auto-scroll voor infinite scroll
+- [x] Background script tab management voor volledige extractie
+- [x] Voortgangsoverlay met stats en logboek
+- [x] Popup bulk import modus
 - [x] Database schema afgestemd op db-init.js
-- [x] Veldnamen hernoemd (text→content, start_image_url→start_image, etc.)
-- [x] NightCafe-specifieke data in metadata JSONB
-- [x] Frontend gesynchroniseerd
+- [x] Lokaal downloaden en opslaan van afbeeldingen
+- [x] Download per item + bulk download
+- [x] Static file serving voor lokale bestanden
+- [x] Storage status badges (Alleen URL / Lokaal + URL)
+- [x] JSON/CSV export
+- [x] Dashboard met statistieken, zoeken, detail panel
+
+## API Endpoints
+- POST /api/import – importeer creatie
+- GET /api/import/status?creationId=X – check import status
+- GET /api/import/health – verbindingstest
+- GET /api/gallery-items – lijst items
+- GET /api/gallery-items/{id} – detail met _prompt
+- GET /api/gallery-items/stats/summary – statistieken
+- DELETE /api/gallery-items/{id} – verwijder
+- POST /api/gallery-items/{id}/download – download afbeeldingen lokaal
+- GET /api/gallery-items/download/stats – download statistieken
+- GET /api/downloads/{id}/{file} – serve lokale bestanden
+- GET /api/prompts – lijst prompts
+- GET /api/export/json, /api/export/csv – export
 
 ## Backlog
 
 ### P1
-- [ ] Extensie packagen als .zip voor permanente Firefox installatie
-- [ ] Auto-sync optie (periodiek nieuwe creaties importeren)
+- [ ] Extensie packagen als .zip
+- [ ] Auto-sync optie
 
 ### P2
-- [ ] Zoekopdrachten & filters (op model, datum, gepubliceerd)
+- [ ] Zoekopdrachten & filters (model, datum, gepubliceerd)
 - [ ] Collections/mappen in dashboard
-- [ ] Afbeeldingen lokaal downloaden en opslaan
 - [ ] Webhook support voor externe apps
