@@ -150,7 +150,7 @@ function App() {
 
   const allGalleryImages = (item) => {
     if (!item) return [];
-    const imgs = item.allImages?.length > 0 ? item.allImages : (item.imageUrl ? [item.imageUrl] : []);
+    const imgs = item.all_images?.length > 0 ? item.all_images : (item.image_url ? [item.image_url] : []);
     return [...new Set(imgs)];
   };
 
