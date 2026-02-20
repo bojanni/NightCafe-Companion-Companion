@@ -88,8 +88,8 @@ function App() {
   const fetchData = useCallback(async () => {
     try {
       const [importsRes, statsRes] = await Promise.all([
-        fetch(`${API}/api/imports`),
-        fetch(`${API}/api/imports/stats/summary`)
+        fetch(`${API}/api/gallery-items`),
+        fetch(`${API}/api/gallery-items/stats/summary`)
       ]);
       const importsData = await importsRes.json();
       const statsData = await statsRes.json();
