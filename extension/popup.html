@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NightCafe Importer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-logo">
+        <img src="icons/icon32.png" alt="logo" class="header-icon">
+        <div class="header-text">
+          <span class="header-title">NightCafe Importer</span>
+          <span class="header-sub">Studio Data Bridge</span>
+        </div>
+      </div>
+      <div class="status-badge" id="statusBadge">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Controleren...</span>
+      </div>
+    </div>
+
+    <!-- Page indicator -->
+    <div class="page-indicator" id="pageIndicator">
+      <span class="page-icon" id="pageIcon">&#9654;</span>
+      <span id="pageLabel">Niet op NightCafe</span>
+    </div>
+
+    <!-- Endpoint URL -->
+    <div class="section">
+      <label class="label" for="endpointUrl">Endpoint URL</label>
+      <div class="input-row">
+        <input
+          type="text"
+          id="endpointUrl"
+          class="input"
+          placeholder="http://localhost:3000"
+          data-testid="endpoint-url-input"
+        >
+        <button id="saveUrlBtn" class="btn btn-icon" title="Opslaan" data-testid="save-url-btn">
+          &#10003;
+        </button>
+      </div>
+    </div>
+
+    <!-- Test Connection -->
+    <div class="section">
+      <button id="testConnectionBtn" class="btn btn-secondary" data-testid="test-connection-btn">
+        <span class="btn-icon-left">&#9654;</span>
+        Test Verbinding
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Page Button Toggle -->
+    <div class="section">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Import Knop op Pagina</div>
+          <div class="toggle-sub">Toon knop op NightCafe pagina&apos;s</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="pageButtonToggle" data-testid="page-button-toggle">
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Import Section -->
+    <div class="section">
+      <div class="section-title">Importeer Huidige Pagina</div>
+      <div class="section-sub" id="importHint">Navigeer naar een NightCafe creatie</div>
+      <button id="importBtn" class="btn btn-primary" data-testid="import-btn">
+        <span class="btn-icon-left">&#8593;</span>
+        Importeer Nu
+      </button>
+    </div>
+
+    <!-- Result message -->
+    <div id="resultMsg" class="result-msg hidden" data-testid="result-message"></div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
