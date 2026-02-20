@@ -155,7 +155,7 @@ pageButtonToggle.addEventListener('change', async () => {
 // Import button
 importBtn.addEventListener('click', async () => {
   importBtn.disabled = true;
-  importBtn.innerHTML = '<span class="spinner"></span> Importeren...';
+  importBtn.innerHTML = '<span class="spinner"></span> Afbeeldingen ophalen...';
   hideMessage();
 
   try {
