@@ -648,6 +648,26 @@ function App() {
                 </div>
               )}
 
+              {/* Storage status */}
+              <div className="detail-field" data-testid="detail-storage">
+                <label>Opslag</label>
+                <div className="storage-row">
+                  <span className={`storage-badge storage-${selected.storage_mode || 'url'}`}>
+                    {selected.storage_mode === 'both' ? 'Lokaal + URL' : 'Alleen URL'}
+                  </span>
+                  {selected.storage_mode !== 'both' && selected.image_url && (
+                    <button
+                      className="btn-download-sm"
+                      onClick={() => handleDownloadOne(selected.id)}
+                      disabled={downloading === selected.id}
+                      data-testid="detail-download-btn"
+                    >
+                      {downloading === selected.id ? 'Downloaden...' : 'Lokaal opslaan'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
             </div>
 
             <div className="detail-actions">
