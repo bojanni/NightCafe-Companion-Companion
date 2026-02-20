@@ -215,6 +215,43 @@ body {
   height: 16px;
 }
 
+/* Download All Button */
+.btn-download-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-download-all:hover:not(:disabled) {
+  background: var(--bg4);
+  border-color: #2563eb;
+  color: #93c5fd;
+}
+.btn-download-all:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-download-all svg {
+  width: 14px;
+  height: 14px;
+}
+.dl-count {
+  background: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 /* ─── Stats bar ───────────────────────────────────────────────────────────── */
 .stats-bar {
   display: flex;
