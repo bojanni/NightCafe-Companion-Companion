@@ -188,6 +188,49 @@ function App() {
     setExportOpen(false);
   };
 
+  // ─── Download functies ──────────────────────────────────────────────────────
+
+  const handleDownloadOne = async (itemId) => {
+    setDownloading(itemId);
+    try {
+      const res = await fetch(`${API}/api/gallery-items/${itemId}/download`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(`${data.downloaded} bestand(en) lokaal opgeslagen`);
+        // Update het geselecteerde item
+        if (selected?.id === itemId) {
+          setSelected(prev => ({ ...prev, storage_mode: 'both', local_path: data.local_path }));
+        }
+        setImports(prev => prev.map(i => i.id === itemId ? { ...i, storage_mode: 'both', local_path: data.local_path } : i));
+        fetchData();
+      } else {
+        showToast(data.detail || 'Download mislukt', 'error');
+      }
+    } catch {
+      showToast('Download mislukt', 'error');
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    const pending = imports.filter(i => i.storage_mode !== 'both' && i.image_url);
+    if (pending.length === 0) { showToast('Alle afbeeldingen al lokaal opgeslagen'); return; }
+    setDownloading('all');
+    let done = 0;
+    let errors = 0;
+    for (const item of pending) {
+      try {
+        const res = await fetch(`${API}/api/gallery-items/${item.id}/download`, { method: 'POST' });
+        if (res.ok) done++;
+        else errors++;
+      } catch { errors++; }
+    }
+    showToast(`${done} gedownload, ${errors} fouten`);
+    setDownloading(null);
+    fetchData();
+  };
+
   return (
     <div className="app" data-testid="app-container">
 
