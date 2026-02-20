@@ -363,9 +363,103 @@ async def list_prompts():
     prompts = await db.prompts.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return prompts
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# DOWNLOAD ROUTES  (afbeeldingen lokaal opslaan)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _detect_ext(url: str, content_type: str = "") -> str:
+    ct_map = {
+        "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+        "image/gif": ".gif", "video/mp4": ".mp4",
+    }
+    for ct, ext in ct_map.items():
+        if ct in content_type:
+            return ext
+    for ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4"):
+        if ext in url.lower():
+            return ext if ext != ".jpeg" else ".jpg"
+    return ".jpg"
+
+
+@api_router.post("/gallery-items/{item_id}/download")
+async def download_gallery_item_images(item_id: str):
+    """Download alle afbeeldingen van een gallery item naar lokale opslag."""
+    item = await db.gallery_items.find_one({"id": item_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(404, "Item niet gevonden")
+
+    if item.get("storage_mode") == "both":
+        return {"success": True, "downloaded": 0, "message": "Al lokaal opgeslagen", "local_path": item.get("local_path")}
+
+    # Verzamel alle URLs om te downloaden
+    urls = []
+    main_url = item.get("image_url")
+    if main_url:
+        urls.append(("main", main_url))
+
+    all_images = item.get("metadata", {}).get("all_images", [])
+    for idx, img_url in enumerate(all_images):
+        if img_url != main_url:
+            urls.append((str(idx + 1), img_url))
+
+    if not urls:
+        raise HTTPException(400, "Geen afbeeldingen om te downloaden")
+
+    item_dir = DOWNLOAD_DIR / item_id
+    item_dir.mkdir(parents=True, exist_ok=True)
+
+    downloaded = []
+    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+        for label, url in urls:
+            try:
+                resp = await client.get(url)
+                if resp.status_code != 200:
+                    continue
+                ext = _detect_ext(url, resp.headers.get("content-type", ""))
+                filename = f"{label}{ext}"
+                (item_dir / filename).write_bytes(resp.content)
+                downloaded.append(f"/api/downloads/{item_id}/{filename}")
+                logger.info(f"Downloaded: {item_id}/{filename} ({len(resp.content)} bytes)")
+            except Exception as e:
+                logger.warning(f"Download failed {url}: {e}")
+
+    if not downloaded:
+        raise HTTPException(502, "Geen afbeeldingen gedownload")
+
+    # Update database
+    meta = item.get("metadata", {})
+    meta["local_images"] = downloaded
+    update = {
+        "local_path": downloaded[0],
+        "storage_mode": "both",
+        "metadata": meta,
+    }
+    await db.gallery_items.update_one({"id": item_id}, {"$set": update})
+    logger.info(f"Lokaal opgeslagen: {item_id} ({len(downloaded)} bestanden)")
+
+    return {
+        "success": True,
+        "downloaded": len(downloaded),
+        "local_path": downloaded[0],
+        "all_local_paths": downloaded,
+    }
+
+
+@api_router.get("/gallery-items/download/stats")
+async def download_stats():
+    """Hoeveel items zijn lokaal opgeslagen."""
+    total = await db.gallery_items.count_documents({})
+    local = await db.gallery_items.count_documents({"storage_mode": "both"})
+    pending = total - local
+    return {"total": total, "local": local, "pending": pending}
+
+
 # ─── App ─────────────────────────────────────────────────────────────────────
 
 app.include_router(api_router)
+
+# Serve lokaal gedownloade bestanden
+app.mount("/api/downloads", StaticFiles(directory=str(DOWNLOAD_DIR)), name="downloads")
 
 app.add_middleware(
     CORSMiddleware,
