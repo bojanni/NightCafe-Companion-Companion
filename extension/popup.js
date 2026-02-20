@@ -19,6 +19,7 @@ const resultMsg = document.getElementById('resultMsg');
 const pageIndicator = document.getElementById('pageIndicator');
 const pageLabel = document.getElementById('pageLabel');
 const importHint = document.getElementById('importHint');
+const importSectionTitle = document.getElementById('importSectionTitle');
 const alreadyImportedBadge = document.getElementById('alreadyImportedBadge');
 const alreadyImportedDate = document.getElementById('alreadyImportedDate');
 
