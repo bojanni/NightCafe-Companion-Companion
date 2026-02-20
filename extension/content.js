@@ -71,18 +71,42 @@ if (window.__ncImporterLoaded) {
     // ── 2. Find Creation Settings section ────────────────────────────────────
     const settingsCtx = getCreationSettingsContainer();
 
-    // ── 3. Text Prompts ───────────────────────────────────────────────────────
-    data.prompt = extractField('Text Prompts', settingsCtx)
-      || extractField('Prompt', settingsCtx)
-      || og('og:description') || tw('twitter:description') || null;
+    // ── 3. Detect creation type (image vs video) ──────────────────────────────
+    const hasVideoPromptLabel = !!findLabelTextNode('Video Prompt', settingsCtx);
+    data.creationType = hasVideoPromptLabel ? 'video' : 'image';
 
-    // Strip "hidden" messages
-    if (data.prompt && /has hidden the prompt/i.test(data.prompt)) {
+    // ── 4. Expand "Show full prompt" if present (async click) ─────────────────
+    await clickShowFullPrompt(settingsCtx);
+
+    // ── 5. Text Prompts (afbeelding) ─────────────────────────────────────────
+    const rawTextPrompt = extractField('Text Prompts', settingsCtx)
+      || extractField('Prompt', settingsCtx)
+      || null;
+
+    if (rawTextPrompt && /has hidden the prompt/i.test(rawTextPrompt)) {
       data.metadata.promptHidden = true;
-      data.prompt = null;
+    } else {
+      data.prompt = rawTextPrompt;
     }
 
-    // ── 4. Revised Prompt – meerdere label-varianten proberen ────────────────
+    // ── 6. Video Prompt ───────────────────────────────────────────────────────
+    data.videoPrompt =
+      extractField('Video Prompt', settingsCtx) ||
+      extractField('Video prompt', settingsCtx) ||
+      extractFieldFuzzy('video prompt', settingsCtx) ||
+      null;
+
+    // Voor video: zet videoPrompt ook als hoofd-prompt als er geen textPrompt is
+    if (!data.prompt && data.videoPrompt) {
+      data.prompt = data.videoPrompt;
+    }
+
+    // Fallback meta tags
+    if (!data.prompt) {
+      data.prompt = og('og:description') || tw('twitter:description') || null;
+    }
+
+    // ── 7. Revised Prompt ─────────────────────────────────────────────────────
     data.revisedPrompt =
       extractField('Revised Prompt', settingsCtx) ||
       extractField('Revised prompt', settingsCtx) ||
@@ -91,49 +115,58 @@ if (window.__ncImporterLoaded) {
       extractFieldFuzzy('revised', settingsCtx) ||
       null;
 
-    // ── 5. Model ──────────────────────────────────────────────────────────────
+    // ── 8. Start Image ────────────────────────────────────────────────────────
+    data.startImageUrl =
+      extractImageAfterLabel('Start Image', settingsCtx) ||
+      extractImageAfterLabel('Start image', settingsCtx) ||
+      extractImageAfterLabel('Reference Image', settingsCtx) ||
+      extractImageAfterLabel('Input Image', settingsCtx) ||
+      null;
+
+    // ── 9. Model ──────────────────────────────────────────────────────────────
     data.model = extractModelName(settingsCtx);
 
-    // ── 6. Initial Resolution ─────────────────────────────────────────────────
+    // ── 10. Initial Resolution ────────────────────────────────────────────────
     data.initialResolution = extractField('Initial Resolution', settingsCtx);
 
-    // ── 7. Aspect Ratio ───────────────────────────────────────────────────────
+    // ── 11. Aspect Ratio ──────────────────────────────────────────────────────
     data.aspectRatio = extractField('Aspect Ratio', settingsCtx);
 
-    // ── 8. Seed ───────────────────────────────────────────────────────────────
+    // ── 12. Seed ──────────────────────────────────────────────────────────────
     data.seed = extractField('Seed', settingsCtx);
 
-    // ── 9. Extra metadata fields ──────────────────────────────────────────────
+    // ── 13. Extra metadata ────────────────────────────────────────────────────
     const samplingMethod = extractField('Sampling method', settingsCtx)
       || extractField('Sampling Method', settingsCtx);
     const runtime = extractField('Runtime', settingsCtx);
     const promptWeight = extractField('Overall Prompt Weight', settingsCtx);
     const refinerWeight = extractField('Refiner Weight', settingsCtx);
+    const duration = extractField('Duration', settingsCtx)
+      || extractField('Video Duration', settingsCtx);
     if (samplingMethod) data.metadata.samplingMethod = samplingMethod;
     if (runtime) data.metadata.runtime = runtime;
     if (promptWeight) data.metadata.overallPromptWeight = promptWeight;
     if (refinerWeight) data.metadata.refinerWeight = refinerWeight;
+    if (duration) data.metadata.duration = duration;
 
-    // ── 10. Published state ───────────────────────────────────────────────────
+    // ── 14. Published state ───────────────────────────────────────────────────
     data.isPublished = extractPublishedState();
 
-    // ── 11. Main image (mdi icon #e64d6a marks it) ────────────────────────────
+    // ── 15. Main image (mdi icon #e64d6a marks it) ────────────────────────────
     data.imageUrl = findMainImage()
       || og('og:image') || tw('twitter:image') || null;
 
-    // ── 12. Gallery images (data-thumb-gallery) ───────────────────────────────
+    // ── 16. Gallery images (data-thumb-gallery) ───────────────────────────────
     data.allImages = await extractGalleryImages();
 
-    // Ensure main image is in allImages list
     if (data.imageUrl && !data.allImages.includes(data.imageUrl)) {
       data.allImages.unshift(data.imageUrl);
     }
-    // If no main image yet, use first gallery image
     if (!data.imageUrl && data.allImages.length > 0) {
       data.imageUrl = data.allImages[0];
     }
 
-    // ── 13. JSON-LD structured data ───────────────────────────────────────────
+    // ── 17. JSON-LD structured data ───────────────────────────────────────────
     document.querySelectorAll('script[type="application/ld+json"]').forEach(el => {
       try {
         const ld = JSON.parse(el.textContent);
@@ -146,7 +179,7 @@ if (window.__ncImporterLoaded) {
       } catch { /* ignore */ }
     });
 
-    // ── 14. Tags ──────────────────────────────────────────────────────────────
+    // ── 18. Tags ──────────────────────────────────────────────────────────────
     const tagLinks = document.querySelectorAll('a[href*="/tag/"]');
     if (tagLinks.length > 0) {
       data.metadata.tags = [...tagLinks].map(a => a.textContent.trim()).filter(Boolean);
